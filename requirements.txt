@@ -1,4 +1,4 @@
-# Versions installed on the GPU machines (results/environment_*.txt; every run's meta.json records python and torch).
+# Versions installed on machines b and c (results/environment_*.txt); every run's meta.json records python and torch.
 torch==2.8.0
 numpy==2.3.2
 pyyaml==6.0.2

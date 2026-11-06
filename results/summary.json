@@ -38,7 +38,9 @@
   ],
   "laptop_l6_delta": -0.0327,
   "laptop_l6_p": 0.0006,
-  "lab_scale_l6_delta": -0.0352
+  "lab_scale_l6_delta": -0.0352,
+  "L5_train_pflops": 2.1,
+  "L6_train_pflops": 3.1
  },
  "ablation": {
   "arms": {

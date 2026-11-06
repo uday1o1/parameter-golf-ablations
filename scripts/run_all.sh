@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Every run behind the results (one GPU). Finished runs are skipped, so the script resumes. The machine_check
-# sweep repeats two baseline seeds on a second machine: there, run `bash scripts/run_all.sh machine_check dev`.
+# sweep repeats two baseline seeds on a second machine: there, run `bash scripts/run_all.sh prepare machine_check dev`.
 # SLOTS = how many training runs share the GPU at a time.
 #   bash scripts/run_all.sh                       # all stages
 #   bash scripts/run_all.sh ablation dev          # selected stages

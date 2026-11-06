@@ -21,7 +21,7 @@ The bpb is that of the artifact: the weights are quantized, compressed, restored
 - **Metrics.** `val_bpb`: validation, non-overlapping windows of 512 tokens (nanolm's default). `sliding_bpb`: stride 64. `quant_val_bpb`: the restored artifact at stride 64. All runs train in fp32 (TF32 matrix multiplies).
 - **Statistics.** The seeds are 1337, 42, 1, 2 and 3 for every arm. A difference is paired over seeds (t-test, 4 degrees of freedom). It counts as **resolved** when it is at least twice the noise floor of the two arms compared (the mean of their two within-arm standard deviations). H marks a Holm-rejected test at 0.05; the families are the ten single techniques and the four leave-one-out arms. Other p values are uncorrected.
 - **Selection rule.** A technique joins the stack if its dev change is below −2× the noise floor and is negative on all 5 seeds.
-- **Machines.** Three rented RTX 4090 machines (`results/machines.json`, `results/environment_*.txt`): **a** ran the ablation; **b** the stack, its leave-one-out arms, its MLP 3× and L6 arms, the baseline rerun, the machine check and 12 of the 15 learning-rate arms; **c** the stack's two learning-rate arms and the other three learning-rate arms. Machine a's software versions are in each run's `meta.json` (it has no environment file). Every run's `meta.json` records its host. Several runs shared each GPU, so recorded wall-clock times are not comparable; `results/bench.json` gives the training speed of each configuration alone.
+- **Machines.** Three rented RTX 4090 machines (`results/machines.json`, `results/environment_*.txt`): **a** ran the ablation; **b** the stack, its leave-one-out arms, its MLP 3× and L6 arms, the baseline rerun, the machine check and 12 of the 15 learning-rate arms; **c** the stack's two learning-rate arms and the other three learning-rate arms. Machine a's Python and torch versions are in each run's `meta.json` (it has no environment file). Every run's `meta.json` records its host. Several runs shared each GPU, so recorded wall-clock times are not comparable; `results/bench.json` gives the training speed of each ablation and stack configuration alone (`nanolm.bench`, with depth recurrence on at every step).
 
 ## Results
 
@@ -30,15 +30,15 @@ The bpb is that of the artifact: the weights are quantized, compressed, restored
 | | val bpb | sliding (64) | artifact round trip | artifact | train FLOPs |
 |---|---:|---:|---:|---:|---:|
 | `L5_golf_mini` (int8), 5 seeds | 1.6371 ± 0.0025 | 1.5912 ± 0.0032 | 1.5913 ± 0.0032 | 6.11 MB | 2.11 P |
-| nanolm's tutorial | 1.633 (one run); 1.6338 ± 0.0018 (2 seeds) | | | 6.11 MB | 2.1 P |
+| nanolm's tutorial | 1.633 (reference run); 1.6338 ± 0.0018 (2 seeds) | | | 6.11 MB | 2.1 P |
 | `L6_golf_mini_stack` (int6), 5 seeds | 1.6015 ± 0.0011 | 1.5532 ± 0.0014 | 1.5544 ± 0.0013 | 5.60 MB | 3.09 P |
 | nanolm's tutorial | 1.601 | 1.554 (stride 128) | 1.555 (stride 128) | 5.59 MB | 3.1 P |
 
-On seeds 1337, 42 and 1 (the challenge asks for three) the baseline is 1.6358 ± 0.0023. FLOPs: nanolm's per-token estimate (`bench.flops_per_token`: 6 × non-embedding parameters + 12 × layers × width × sequence length) times the training tokens, plus the re-run layers' share from 35% of training (`analysis/summarize.py`).
+On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline is 1.6358 ± 0.0023. FLOPs: nanolm's per-token estimate (`bench.flops_per_token`: 6 × non-embedding parameters + 12 × layers × width × sequence length) times the training tokens, plus the re-run layers' share from 35% of training (`analysis/summarize.py`).
 
 ### Each technique alone (L5 + one change, 5 seeds)
 
-Δ is the change from the baseline (negative is better). Dev Δ / floor: the selection test. Last columns: artifact round trip at stride 64 (int8), the largest artifact over the seeds (✗: over 6.5 MB), training time per step on its own (ms) and training FLOPs (P = 10¹⁵).
+Δ is the change from the baseline (negative is better). Dev Δ / floor: the selection test. Last columns: artifact round trip at stride 64 (int8), the largest artifact over the seeds (✗: over 6.5 MB), training time per step on its own (ms; `nanolm.bench`, depth recurrence on at every step) and training FLOPs (P = 10¹⁵).
 
 | technique | val bpb | val Δ | seeds lower | dev Δ / floor | selected | sliding | round trip | MB | ms/step | FLOPs |
 |---|---:|---:|---:|---:|:---:|---:|---:|---:|---:|---:|
@@ -101,7 +101,7 @@ The two int6 arms trade bits per weight for a bigger model and both fit. Adding 
 
 ### When the gains appear
 
-With the sweeps' `train.eval_every: 100`, nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every gain in the figure is largest at step 500, the first point shown, and narrows at every later evaluation shown: the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6% and 6.0% of their step-500 lead. At this budget most of what the techniques buy is a faster start.
+With the sweeps' `train.eval_every: 100`, nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every gain in the figure is largest at step 500, the first point shown, and narrows at every later evaluation shown: the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6.3% and 6.0% of their step-500 lead. At this budget most of what the techniques buy is a faster start.
 
 ### Bytes: the leaderboard model
 
@@ -127,7 +127,7 @@ Bpb of the unquantized model by evaluation stride: no overlap 1.6004, stride 256
 | `configs/sweeps/` | `ablation.yaml` (each technique alone), `lr.yaml`, `stack.yaml` (stack, leave-one-out, stack-family arms), `machine_check.yaml` (two baseline seeds on a second machine) |
 | `runs/sweeps/<sweep>/<arm>_s<seed>/` | nanolm's record of every run (`config.yaml`, `meta.json`, `train_log.jsonl`, `eval_log.jsonl`, `metrics.json`, `stdout.log`), `dev.json`; for the stack sweep's baseline, stack, stack_plus_mlp3x and stack_plus_l6 runs also `compress.json` |
 | `runs/sweeps/<sweep>/summary.csv`, `summary.md` | `python -m nanolm.analyze` on the ablation, lr and stack sweeps, with `curves.png` and `bars.png` |
-| `results/` | `summary.json` (every result above except the token_conv kernel RMS, in `token_conv_weights.json`, and the test count, in `tests.txt`), `bench.json` (speed of each configuration alone), `machines.json`, `environment_b.txt`, `environment_c.txt`, `tests.txt`, `token_conv_weights.json` |
+| `results/` | `summary.json` (every result above except the token_conv kernel RMS, in `token_conv_weights.json`, and the test count, in `tests.txt`), `bench.json` (speed of each ablation and stack configuration alone), `machines.json`, `environment_b.txt`, `environment_c.txt`, `tests.txt`, `token_conv_weights.json` |
 | `analysis/` | `summarize.py`, `figures.py` |
 | `figures/` | `ablation.png`, `lr.png`, `stack.png`, `dynamics.png` |
 | `scripts/` | `setup.sh`, `run_all.sh`, `dev_eval.py`, `bench_all.py`, `token_conv_weights.py`, `env.sh` |
@@ -135,7 +135,7 @@ Bpb of the unquantized model by evaluation stride: no overlap 1.6004, stride 256
 
 ## Reproducing
 
-Requires Python 3.11 and an NVIDIA GPU (all runs: RTX 4090, 24 GB; in `nanolm.bench` every configuration peaks at 2.87 GB or less, `results/bench.json`).
+Requires Python 3.11 and an NVIDIA GPU (all runs: RTX 4090, 24 GB; the largest peak memory in `results/bench.json` is 2.87 GB, stack_plus_l6).
 
 ```bash
 bash scripts/setup.sh          # nanolm at 8418fc1 into external/, apply the patch, install requirements
@@ -146,12 +146,12 @@ python analysis/figures.py     # figures/*.png (no GPU)
 
 - Any subset of stages can be named (`bash scripts/run_all.sh stack dev`). Finished runs are skipped, so the script resumes. `SLOTS` (default 4) runs share the GPU.
 - `prepare` downloads the first FineWeb shard and the validation split in nanolm's golf format (`python -m nanolm.prepare --golf-shards 1`).
-- GPU training is not bitwise reproducible: the same seed on machine b differs from machine a by +0.00003 and −0.00155 val bpb (seeds 1337 and 42; `bash scripts/run_all.sh machine_check dev` on a second machine). Reruns therefore match the means and spreads above, not every digit.
-- Without a GPU, `summarize.py` and `figures.py` rebuild `results/summary.json` and `figures/*.png` from the committed `runs/`, `results/bench.json` and `results/machines.json`; `python -m nanolm.analyze` rebuilds each sweep's summary and plots.
+- GPU training is not bitwise reproducible: the same seed on machine b differs from machine a by +0.00003 and −0.00155 val bpb (seeds 1337 and 42; `bash scripts/run_all.sh prepare machine_check dev` on a second machine). Reruns therefore match the means and spreads above, not every digit.
+- Without a GPU, `summarize.py` and `figures.py` rebuild `results/summary.json` and `figures/*.png` from the committed `runs/`, `results/bench.json` and `results/machines.json`; the `analyze` stage (`python -m nanolm.analyze`) rebuilds the ablation, lr and stack sweeps' summaries and plots.
 - Checkpoints are not committed.
 
 ## Limitations
 
 - **Scale.** One model size and token budget (6.6M to 8.4M parameters, 41M tokens) and one sequence length (512). attn_window is meant for longer contexts than these.
 - **Fixed settings.** New options at one setting each (token_conv 4, attn_window 128 in layers 0 to 2); learning rates on a factor-of-two grid.
-- **Statistics.** 5 seeds per arm; paired t-tests with Holm correction only within the two families named above. Arms run on different machines are paired by seed across machines. The baseline rerun on machine b matches machine a's mean to 0.0002 bpb (−0.0001, 95% CI −0.0021 to +0.0019); machine c has no calibration run.
+- **Statistics.** 5 seeds per arm; paired t-tests with Holm correction only within the two families named above. Arms run on different machines are paired by seed across machines. The baseline rerun on machine b differs from machine a's by −0.0001 bpb (95% CI −0.0021 to +0.0019); machine c has no calibration run.

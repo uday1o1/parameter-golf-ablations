@@ -1,6 +1,7 @@
-# Learning-rate sensitivity around nanolm's settings (Muon matrix_lr 0.04; Adam lr 0.04 for gains, skip
-# weights and the token_conv kernels), 5 seeds: half and twice (baseline Adam lr: half; attn_window: Muon only), then halving
-# again while the best point is the lowest rate tried. The 1x points are the ablation sweep's runs.
+# Learning-rate sensitivity around nanolm's settings (Muon matrix_lr 0.04 for the hidden matrices; Adam
+# lr 0.04 for the other parameters except the embedding: gains, scalars, skip weights, token_conv kernels),
+# 5 seeds: half and twice (baseline Adam lr: half; attn_window: Muon only), then halving again while the
+# best point is the lowest rate tried. The 1x points are the ablation sweep's runs.
 #   python -m nanolm.sweep --sweep configs/sweeps/lr.yaml --gpus 0,0,0
 name: lr
 base: ../../external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml

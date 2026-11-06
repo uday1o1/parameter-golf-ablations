@@ -17,7 +17,7 @@ from scipy.stats import t as student_t, ttest_rel
 ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "runs" / "sweeps"
 SEEDS = [1337, 42, 1, 2, 3]
-SEEDS3 = [1337, 42, 1]                      # the first three seeds (3-seed numbers of the leaderboard row)
+SEEDS3 = [1337, 42, 1]                      # the first three seeds (every arm's *_3seeds numbers, the leaderboard row)
 STEPS, TOKENS = 2500, 40_960_000
 BUDGET = 6_500_000
 SINGLES = ["depth_recur", "leaky_relu2", "value_residual", "mlp3x", "xsa", "qk_gain4", "partial_rope_lnscale",
@@ -33,7 +33,8 @@ TUTORIAL = {"L5_val_bpb_single": 1.633, "L5_val_bpb_2seeds": (1.6338, 0.0018), "
             "lab_scale_delta": {"depth_recur": -0.0049, "leaky_relu2": -0.0059, "value_residual": -0.0069,
                                 "mlp3x": -0.0121, "partial_rope_lnscale": 0.0073},
             "laptop_ablation_seeds": 2, "laptop_l6_2seeds": (1.6011, 0.0017), "laptop_l6_delta": -0.0327,
-            "laptop_l6_p": 0.0006, "lab_scale_l6_delta": -0.0352}
+            "laptop_l6_p": 0.0006, "lab_scale_l6_delta": -0.0352,
+            "L5_train_pflops": 2.1, "L6_train_pflops": 3.1}
 
 
 def load(sweep):
