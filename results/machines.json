@@ -1,5 +1,5 @@
 {
- "note": "Rented machines, one RTX 4090 each (vast.ai). host = the container id in every run's meta.json; gpu_ram and cpu_ram in MB. a and b: from the rental records (a has no environment file). c: from results/environment_c.txt (its rental record, with RAM and image, was not saved).",
+ "note": "Three machines, one RTX 4090 each. host = the container id in every run's meta.json; gpu_ram and cpu_ram in MB. a and b: from the hosting provider's machine records (a has no environment file). c: from results/environment_c.txt, which records no RAM or image.",
  "a": {
   "host": "c6803a09a403",
   "gpu_name": "RTX 4090",
