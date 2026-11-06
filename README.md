@@ -62,7 +62,7 @@ On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline is 1.
 
 ### Learning rate
 
-`L5_golf_mini` inherits its learning rates (Muon matrix_lr 0.04, Adam lr 0.04) from nanolm's 8×H100 golf baseline (`04_golf_baseline.yaml`, 524,288 tokens per step). Dev bpb, mean over 5 seeds, with the change from 1× (†: resolved). Bold: the best point.
+`L5_golf_mini` inherits its learning rates (Muon matrix_lr 0.04, Adam lr 0.04) from nanolm's 8×H100 golf baseline (`04_golf_baseline.yaml`, 524,288 tokens per step). Dev bpb, mean over 5 seeds, with the change from 1× (†: resolved). Bold: the lowest point.
 
 | arm, rate | 0.125× | 0.25× | 0.5× | 1× | 2× |
 |---|---:|---:|---:|---:|---:|
@@ -72,7 +72,7 @@ On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline is 1.
 | baseline, Adam lr | 1.6417 (−0.0010) | **1.6373 (−0.0054)** | 1.6386 (−0.0041) | 1.6427 |  |
 | token_conv, Adam lr |  | 1.6312 (−0.0048†) | **1.6305 (−0.0055†)** | 1.6359 | 1.6477 (+0.0118†) |
 
-Halving Muon's matrix_lr lowers dev bpb by 0.0086, 0.0084, 0.0079 (baseline, token_conv, attn_window), as much as the best single technique (XSA, dev −0.0087). So matrix_lr 0.02 is a stack member, ablated like a technique. Adam's lr is a smaller effect on the baseline, below the resolution rule, so the stack keeps 0.04 and `stack_adam_lr0.02` tests the other choice.
+Halving Muon's matrix_lr lowers dev bpb by 0.0086, 0.0084, 0.0079 (baseline, token_conv, attn_window), about as much as XSA, the largest single change (dev −0.0087). So matrix_lr 0.02 is a stack member, ablated like a technique. Adam's lr is a smaller effect on the baseline, below the resolution rule, so the stack keeps 0.04 and `stack_adam_lr0.02` tests the other choice.
 
 ### The stack and leave-one-out
 
@@ -87,13 +87,13 @@ The stack is L5 + XSA + value residual + token_conv + matrix_lr 0.02, trained on
 
 - **The gains do not add up.** The four single changes sum to −0.0305 per seed, the stack gives −0.0205, and the interaction is +0.0100 (95% CI +0.0033 to +0.0167, p = 0.01).
 - **token_conv is redundant in the stack.** Alone it gives −0.0065; removing it from the stack changes nothing measurable. Its kernels are trained, not dead: their RMS per layer ranges from 0.764 to 2.379 in the stack and from 0.682 to 2.755 alone at the same matrix_lr, from a zero start (`results/token_conv_weights.json`). XSA and the learning rate keep resolved, Holm-significant costs. Removing value residual costs bpb on all 5 seeds, but one seed's large cost leaves it unresolved.
-- **The tutorial's L6 stack is close to additive.** With every part measured alone (the tutorial's laptop ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not resolved).
+- **The tutorial's L6 stack is close to additive.** With every part measured alone (the tutorial's laptop ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not significant).
 
 | stack-family arm | val bpb | vs stack | dev bpb | round trip | MB | machine |
 |---|---:|---:|---:|---:|---:|:---:|
 | stack (int8) | 1.6165 ± 0.0012 | | 1.6216 ± 0.0007 | 1.5682 | 6.16 | b |
 | stack, matrix_lr 0.01 | 1.6199 ± 0.0039 | +0.0034 (p = 0.11), not resolved | 1.6254 ± 0.0041 | 1.5720 | 6.16 | c |
-| stack + Adam lr 0.02 | 1.6084 ± 0.0015 | −0.0080 (p = 0.0002) | 1.6128 ± 0.0013 | 1.5589 | 6.20 | c |
+| stack, Adam lr 0.02 | 1.6084 ± 0.0015 | −0.0080 (p = 0.0002) | 1.6128 ± 0.0013 | 1.5589 | 6.20 | c |
 | stack + MLP 3× (int6) | 1.6085 ± 0.0017 | −0.0080 (p = 0.002) | 1.6134 ± 0.0016 | 1.5614 | 5.67 | b |
 | stack + the rest of L6 (int6) | 1.6004 ± 0.0014 | −0.0161 (p < 0.0001) | 1.6053 ± 0.0017 | 1.5536 | 5.70 | b |
 
