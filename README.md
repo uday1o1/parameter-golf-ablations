@@ -101,7 +101,7 @@ The two int6 arms trade bits per weight for a bigger model and both fit. Adding 
 
 ### When the gains appear
 
-With the sweeps' `train.eval_every: 100`, nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every mean gap in the figure is largest at step 500, the first point shown, and narrows at every later evaluation shown (point estimates): the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6.3% and 6.0% of their step-500 lead. By these point estimates, most of each early lead is gone by the end of the budget.
+With the sweeps' `train.eval_every: 100`, nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every mean gap in the figure is largest at step 500, the first point shown, and narrows at every later evaluation shown (point estimates): the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6.3% and 6.0% of their step-500 lead. By these point estimates, most of each early lead other than depth recurrence's is gone by the end of the budget.
 
 ### Bytes: the leaderboard model
 
