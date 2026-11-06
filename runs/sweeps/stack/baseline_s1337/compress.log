@@ -1,0 +1,13 @@
+stride    0: val_bpb 1.6340  (2.0s)
+stride  256: val_bpb 1.5939  (3.7s)
+stride  128: val_bpb 1.5889  (7.4s)
+stride   64: val_bpb 1.5873  (14.7s)
+int8 + zlib:   6.080 MB (7.37 bits/param) | round-trip bpb 1.6341 (gap +0.0001)
+int8 + lzma:   6.089 MB (7.38 bits/param) | round-trip bpb 1.6341 (gap +0.0001)
+int6 + zlib:   4.613 MB (5.59 bits/param) | round-trip bpb 1.6351 (gap +0.0012)
+int6 + lzma:   4.473 MB (5.42 bits/param) | round-trip bpb 1.6351 (gap +0.0012)
+int5 + zlib:   4.061 MB (4.92 bits/param) | round-trip bpb 1.6396 (gap +0.0057)
+int5 + lzma:   3.719 MB (4.51 bits/param) | round-trip bpb 1.6396 (gap +0.0057)
+int4 + zlib:   3.229 MB (3.91 bits/param) | round-trip bpb 1.6612 (gap +0.0272)
+int4 + lzma:   3.005 MB (3.64 bits/param) | round-trip bpb 1.6612 (gap +0.0272)
+-> runs/sweeps/stack/baseline_s1337/compress.json

@@ -1,0 +1,20 @@
+{
+ "name": "stack_minus_value_residual",
+ "seed": 1,
+ "date": "2026-11-05T23:39:07",
+ "git": {
+  "commit": "8418fc1bae85657190f11749483bf2e729b9702c",
+  "branch": "HEAD",
+  "dirty": true
+ },
+ "host": "eb1e3f545837",
+ "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+ "python": "3.11.13",
+ "torch": "2.8.0+cu128",
+ "device": "cuda (precision=fp32, compile=yes)",
+ "world_size": 1,
+ "command": "/root/repo/external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/train.py --config /root/repo/external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml precision=\"fp32\" train.eval_every=100 eval.sliding_stride=64 model.xsa_last_n=3 model.token_conv=4 train.matrix_lr=0.02 name=stack_minus_value_residual seed=1 run_dir=/root/repo/runs/sweeps/stack/stack_minus_value_residual_s1 tags=[\"stack\"]",
+ "tags": [
+  "stack"
+ ]
+}

@@ -1,0 +1,13 @@
+stride    0: val_bpb 1.6163  (2.3s)
+stride  256: val_bpb 1.5755  (4.2s)
+stride  128: val_bpb 1.5703  (8.5s)
+stride   64: val_bpb 1.5684  (16.9s)
+int8 + zlib:   6.119 MB (7.41 bits/param) | round-trip bpb 1.6164 (gap +0.0001)
+int8 + lzma:   6.128 MB (7.42 bits/param) | round-trip bpb 1.6164 (gap +0.0001)
+int6 + zlib:   4.638 MB (5.61 bits/param) | round-trip bpb 1.6174 (gap +0.0012)
+int6 + lzma:   4.511 MB (5.46 bits/param) | round-trip bpb 1.6174 (gap +0.0012)
+int5 + zlib:   4.099 MB (4.96 bits/param) | round-trip bpb 1.6219 (gap +0.0057)
+int5 + lzma:   3.782 MB (4.58 bits/param) | round-trip bpb 1.6219 (gap +0.0057)
+int4 + zlib:   3.261 MB (3.95 bits/param) | round-trip bpb 1.6373 (gap +0.0210)
+int4 + lzma:   3.040 MB (3.68 bits/param) | round-trip bpb 1.6373 (gap +0.0210)
+-> runs/sweeps/stack/stack_s2/compress.json

@@ -1,0 +1,84 @@
+[run] /root/repo/runs/sweeps/stack/stack_minus_xsa_s2
+[run] device: cuda (precision=fp32, compile=yes) | world_size=1
+[data] fineweb10B_sp1024 | tokenizer=sp:data/golf/tokenizers/fineweb_1024_bpe.model vocab=1024 | train 100,000,000 tok | val 62,021,846 tok
+[model] gpt: 6,610,990 params (6,217,774 non-embedding)
+[train] 2500 steps x 16,384 tokens/step (0.41 passes over train) | optimizer=muon schedule=wsd | time budget 5400s
+step     50 | loss 5.5890 | lr 2.00e-02 | 117.2k tok/s | 7s
+step    100 | loss 4.0707 | lr 2.00e-02 | 87.1k tok/s | 16s
+  eval step    100 | val_loss 3.9270 | val_bpb 2.3255 | acc 20.0% | 16s
+step    150 | loss 3.8650 | lr 2.00e-02 | 75.1k tok/s | 27s
+step    200 | loss 3.7156 | lr 2.00e-02 | 81.4k tok/s | 37s
+  eval step    200 | val_loss 3.5601 | val_bpb 2.1082 | acc 26.2% | 37s
+step    250 | loss 3.4915 | lr 2.00e-02 | 75.1k tok/s | 48s
+step    300 | loss 3.3290 | lr 2.00e-02 | 81.1k tok/s | 58s
+  eval step    300 | val_loss 3.3518 | val_bpb 1.9849 | acc 30.1% | 58s
+step    350 | loss 3.2887 | lr 2.00e-02 | 75.2k tok/s | 69s
+step    400 | loss 3.2661 | lr 2.00e-02 | 81.1k tok/s | 79s
+  eval step    400 | val_loss 3.2715 | val_bpb 1.9373 | acc 31.2% | 79s
+step    450 | loss 3.2175 | lr 2.00e-02 | 75.1k tok/s | 90s
+step    500 | loss 3.1551 | lr 2.00e-02 | 81.1k tok/s | 100s
+  eval step    500 | val_loss 3.1605 | val_bpb 1.8716 | acc 33.0% | 100s
+step    550 | loss 3.1177 | lr 2.00e-02 | 75.1k tok/s | 111s
+step    600 | loss 3.1376 | lr 2.00e-02 | 81.0k tok/s | 121s
+  eval step    600 | val_loss 3.1331 | val_bpb 1.8553 | acc 33.1% | 121s
+step    650 | loss 3.1039 | lr 2.00e-02 | 75.1k tok/s | 132s
+step    700 | loss 3.1427 | lr 2.00e-02 | 81.1k tok/s | 142s
+  eval step    700 | val_loss 3.0621 | val_bpb 1.8133 | acc 34.4% | 142s
+step    750 | loss 3.1735 | lr 2.00e-02 | 75.1k tok/s | 153s
+step    800 | loss 3.1297 | lr 2.00e-02 | 81.1k tok/s | 163s
+  eval step    800 | val_loss 3.0808 | val_bpb 1.8244 | acc 34.2% | 163s
+step    850 | loss 3.0850 | lr 2.00e-02 | 75.1k tok/s | 174s
+step    900 | loss 3.0675 | lr 2.00e-02 | 81.2k tok/s | 184s
+  eval step    900 | val_loss 2.9953 | val_bpb 1.7738 | acc 35.5% | 184s
+step    950 | loss 3.0281 | lr 2.00e-02 | 75.1k tok/s | 195s
+step   1000 | loss 3.0175 | lr 2.00e-02 | 81.1k tok/s | 205s
+  eval step   1000 | val_loss 3.0173 | val_bpb 1.7868 | acc 35.2% | 205s
+step   1050 | loss 2.9749 | lr 2.00e-02 | 75.1k tok/s | 216s
+step   1100 | loss 2.9986 | lr 2.00e-02 | 80.3k tok/s | 227s
+  eval step   1100 | val_loss 2.9619 | val_bpb 1.7540 | acc 36.1% | 227s
+step   1150 | loss 2.9347 | lr 2.00e-02 | 75.2k tok/s | 237s
+step   1200 | loss 2.9155 | lr 2.00e-02 | 79.4k tok/s | 248s
+  eval step   1200 | val_loss 2.9444 | val_bpb 1.7436 | acc 36.3% | 248s
+step   1250 | loss 2.9125 | lr 2.00e-02 | 75.2k tok/s | 259s
+step   1300 | loss 2.9067 | lr 2.00e-02 | 78.4k tok/s | 269s
+  eval step   1300 | val_loss 2.9180 | val_bpb 1.7280 | acc 36.7% | 269s
+step   1350 | loss 2.9363 | lr 2.00e-02 | 75.1k tok/s | 280s
+step   1400 | loss 2.9593 | lr 2.00e-02 | 78.0k tok/s | 290s
+  eval step   1400 | val_loss 2.9021 | val_bpb 1.7185 | acc 36.9% | 290s
+step   1450 | loss 2.9349 | lr 2.00e-02 | 75.7k tok/s | 301s
+step   1500 | loss 2.9941 | lr 2.00e-02 | 78.0k tok/s | 312s
+  eval step   1500 | val_loss 2.8925 | val_bpb 1.7128 | acc 37.0% | 312s
+step   1550 | loss 2.9114 | lr 2.00e-02 | 76.5k tok/s | 323s
+step   1600 | loss 2.9205 | lr 2.00e-02 | 78.0k tok/s | 333s
+  eval step   1600 | val_loss 2.9205 | val_bpb 1.7295 | acc 36.5% | 333s
+step   1650 | loss 2.9498 | lr 2.00e-02 | 77.4k tok/s | 344s
+step   1700 | loss 2.8823 | lr 2.00e-02 | 78.0k tok/s | 354s
+  eval step   1700 | val_loss 2.8570 | val_bpb 1.6918 | acc 37.6% | 354s
+step   1750 | loss 2.8975 | lr 2.00e-02 | 78.0k tok/s | 365s
+step   1800 | loss 2.8500 | lr 2.00e-02 | 78.0k tok/s | 375s
+  eval step   1800 | val_loss 2.8513 | val_bpb 1.6885 | acc 37.8% | 375s
+step   1850 | loss 2.8259 | lr 2.00e-02 | 78.0k tok/s | 386s
+step   1900 | loss 2.8087 | lr 1.92e-02 | 78.0k tok/s | 396s
+  eval step   1900 | val_loss 2.8562 | val_bpb 1.6914 | acc 37.6% | 396s
+step   1950 | loss 2.8806 | lr 1.76e-02 | 78.0k tok/s | 407s
+step   2000 | loss 2.8245 | lr 1.60e-02 | 78.0k tok/s | 417s
+  eval step   2000 | val_loss 2.8153 | val_bpb 1.6671 | acc 38.4% | 417s
+step   2050 | loss 2.7931 | lr 1.44e-02 | 78.1k tok/s | 428s
+step   2100 | loss 2.7758 | lr 1.28e-02 | 78.0k tok/s | 438s
+  eval step   2100 | val_loss 2.7970 | val_bpb 1.6563 | acc 38.7% | 438s
+step   2150 | loss 2.7629 | lr 1.12e-02 | 78.0k tok/s | 449s
+step   2200 | loss 2.8026 | lr 9.63e-03 | 78.0k tok/s | 459s
+  eval step   2200 | val_loss 2.7549 | val_bpb 1.6314 | acc 39.4% | 459s
+step   2250 | loss 2.7735 | lr 8.03e-03 | 78.0k tok/s | 470s
+step   2300 | loss 2.8357 | lr 6.43e-03 | 78.0k tok/s | 480s
+  eval step   2300 | val_loss 2.7275 | val_bpb 1.6151 | acc 39.8% | 480s
+step   2350 | loss 2.7519 | lr 4.83e-03 | 78.0k tok/s | 491s
+step   2400 | loss 2.7782 | lr 3.23e-03 | 78.1k tok/s | 501s
+  eval step   2400 | val_loss 2.7000 | val_bpb 1.5989 | acc 40.3% | 501s
+step   2450 | loss 2.7437 | lr 1.63e-03 | 78.1k tok/s | 512s
+step   2500 | loss 2.7427 | lr 3.20e-05 | 78.0k tok/s | 522s
+  eval step   2500 | val_loss 2.6850 | val_bpb 1.5900 | acc 40.6% | 522s
+[final] val_loss 2.6997 | val_bpb 1.6195 | ppl 14.88 | acc 40.64% | 2,097,152 tokens, 2.41 bytes/token
+[final] sliding(stride=64) val_bpb 1.5707
+[export] int8+lzma: 6.125 MB model + 24 KB code | round-trip val_bpb 1.5708 (gap +0.0001)
+[done] metrics -> /root/repo/runs/sweeps/stack/stack_minus_xsa_s2/metrics.json

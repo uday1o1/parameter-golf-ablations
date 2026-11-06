@@ -1,0 +1,178 @@
+diff --git a/DeepDataMiningLearning/llm/nanolm/config.py b/DeepDataMiningLearning/llm/nanolm/config.py
+index a677983..8369dab 100644
+--- a/DeepDataMiningLearning/llm/nanolm/config.py
++++ b/DeepDataMiningLearning/llm/nanolm/config.py
+@@ -91,6 +91,9 @@ class ModelConfig:
+     bigram_dim: int = 128
+     value_residual: bool = False         # mix layer-0 values into every later layer
+     attn_gate: bool = False              # per-head sigmoid gate on the attention output
++    token_conv: int = 0                  # >0: causal depthwise conv (this kernel size) on each block's attention input
++    attn_window: int = 0                 # >0: sliding-window attention, each query sees the last attn_window tokens
++    window_layers: list = field(default_factory=list)  # layers that use attn_window (empty = every layer)
+ 
+ 
+ # ---------------------------------------------------------------------------- train
+diff --git a/DeepDataMiningLearning/llm/nanolm/models/gpt.py b/DeepDataMiningLearning/llm/nanolm/models/gpt.py
+index ffb2f5e..22920f1 100644
+--- a/DeepDataMiningLearning/llm/nanolm/models/gpt.py
++++ b/DeepDataMiningLearning/llm/nanolm/models/gpt.py
+@@ -23,6 +23,8 @@ does and where it came from, so students can switch it on in a YAML file and mea
+   recur_layers            depth recurrence: re-run a band of layers (weight reuse)  records 03-31+
+   parallel_from           attention and MLP read the same input (GPT-J/PaLM style)  records 03-31+
+   attn_gate               per-head sigmoid gate on attention output                 records 04-19+
++  token_conv              causal depthwise conv on each block's attention input     Gated DeltaNet / Canon layers
++  attn_window, window_layers  sliding-window (local) attention in chosen layers    Mistral / Gemma
+ """
+ from __future__ import annotations
+ 
+@@ -132,6 +134,10 @@ class Attention(nn.Module):
+         self.xsa = cfg.xsa_last_n > 0 and layer >= cfg.n_layers - cfg.xsa_last_n
+         # Value residual (ResFormer): v_l <- a*v_0 + b*v_l, lets late layers reuse early token info.
+         self.v_mix = nn.Parameter(torch.tensor([0.5, 0.5])) if cfg.value_residual and layer > 0 else None
++        # Sliding-window attention: query t attends only to keys t-W+1 .. t (W = attn_window) in the
++        # layers listed in window_layers (all layers if the list is empty).
++        self.window = cfg.attn_window if cfg.attn_window > 0 and (not cfg.window_layers or layer in cfg.window_layers) else 0
++        self._mask = (0, None, None)
+         # Gated attention: out_h <- 2*sigmoid(x W_g)_h * out_h  (starts as identity because W_g = 0)
+         self.gate = None
+         if cfg.attn_gate:
+@@ -139,6 +145,16 @@ class Attention(nn.Module):
+             nn.init.zeros_(self.gate.weight)
+             self.gate._no_init = True
+ 
++    def window_mask(self, T: int, device):
++        """Boolean (T, T) mask, True where query i may attend to key j: i - W < j <= i."""
++        n, dev, m = self._mask
++        if n != T or dev != device:
++            i = torch.arange(T, device=device)
++            d = i[:, None] - i[None, :]
++            m = (d >= 0) & (d < self.window)
++            self._mask = (T, device, m)
++        return m
++
+     def forward(self, x, v0=None):
+         B, T, D = x.shape
+         q = self.c_q(x).view(B, T, self.H, self.hd).transpose(1, 2)
+@@ -159,8 +175,12 @@ class Attention(nn.Module):
+             rep = self.H // self.KV
+             k = k.repeat_interleave(rep, dim=1)
+             v = v.repeat_interleave(rep, dim=1)
+-        y = F.scaled_dot_product_attention(q, k, v, is_causal=True,
+-                                           dropout_p=self.dropout if self.training else 0.0)
++        if self.window:
++            y = F.scaled_dot_product_attention(q, k, v, attn_mask=self.window_mask(T, x.device),
++                                               dropout_p=self.dropout if self.training else 0.0)
++        else:
++            y = F.scaled_dot_product_attention(q, k, v, is_causal=True,
++                                               dropout_p=self.dropout if self.training else 0.0)
+         if self.xsa:
+             vn = v / (v.norm(dim=-1, keepdim=True) + 1e-6)
+             y = y - (y * vn).sum(-1, keepdim=True) * vn
+@@ -201,6 +221,22 @@ class MLP(nn.Module):
+         return self.proj(h)
+ 
+ 
++# ================================================================================ token conv
++class TokenConv(nn.Module):
++    """h_t <- h_t + sum_k w_k * h_{t-k}, a causal depthwise convolution over time (kernel K, one weight
++    per channel and offset). Gives every layer a cheap view of the last K-1 tokens before attention,
++    like the short convolution in Gated DeltaNet / Mamba layers. Zero-init: starts as the identity."""
++
++    def __init__(self, dim: int, kernel: int):
++        super().__init__()
++        self.kernel = kernel
++        self.weight = nn.Parameter(torch.zeros(dim, 1, kernel))
++
++    def forward(self, h):
++        x = F.pad(h.transpose(1, 2), (self.kernel - 1, 0))           # (B, D, T + K - 1), pad on the left
++        return h + F.conv1d(x, self.weight.to(h.dtype), groups=h.shape[-1]).transpose(1, 2)
++
++
+ # ===================================================================================== block
+ class Block(nn.Module):
+     def __init__(self, cfg, layer: int):
+@@ -216,6 +252,7 @@ class Block(nn.Module):
+         self.resid_mix = nn.Parameter(torch.stack([torch.ones(D), torch.zeros(D)])) if cfg.resid_mix else None
+         self.in_scale = 1.0 / math.sqrt(layer + 1) if cfg.ln_scale else 1.0
+         self.parallel = 0 <= cfg.parallel_from <= layer
++        self.conv = TokenConv(D, cfg.token_conv) if cfg.token_conv > 0 else None
+ 
+     def _scale(self, s, h):
+         return h if s is None else s.to(h.dtype) * h
+@@ -224,7 +261,10 @@ class Block(nn.Module):
+         if self.resid_mix is not None:
+             m = self.resid_mix.to(x.dtype)
+             x = m[0] * x + m[1] * x0
+-        a, v = self.attn(self.attn_norm(x) * self.in_scale, v0)
++        h = self.attn_norm(x) * self.in_scale
++        if self.conv is not None:
++            h = self.conv(h)
++        a, v = self.attn(h, v0)
+         if self.parallel:                     # both branches read the same x
+             m = self.mlp(self.mlp_norm(x) * self.in_scale)
+             return x + self.drop(self._scale(self.attn_scale, a)) + self.drop(self._scale(self.mlp_scale, m)), v
+diff --git a/DeepDataMiningLearning/llm/nanolm/tests/test_nanolm.py b/DeepDataMiningLearning/llm/nanolm/tests/test_nanolm.py
+index 091b614..baa36b2 100644
+--- a/DeepDataMiningLearning/llm/nanolm/tests/test_nanolm.py
++++ b/DeepDataMiningLearning/llm/nanolm/tests/test_nanolm.py
+@@ -35,6 +35,9 @@ GOLF_FEATURES = {
+     "recurrence": dict(recur_layers=[1, 2], recur_times=2),
+     "learned_pos_layernorm": dict(pos="learned", norm="layernorm", mlp="gelu", bias=True),
+     "swiglu": dict(mlp="swiglu"),
++    "token_conv": dict(token_conv=4),
++    "attn_window": dict(attn_window=4),
++    "attn_window_some_layers": dict(attn_window=4, window_layers=[0, 2]),
+ }
+ 
+ 
+@@ -232,3 +235,50 @@ def test_dpo_starts_at_zero_margin_with_lora():
+     assert abs(margin.item()) < 1e-6              # LoRA B starts at 0: policy == reference
+     assert abs(loss.item() - math.log(2)) < 1e-5  # -log sigmoid(0)
+     assert acc.item() == 0.5                      # ties count as half
++
++
++def test_attn_window_limits_context():
++    """With one layer and attn_window=W, the output at t must not depend on tokens before t-W+1."""
++    torch.manual_seed(0)
++    model = build_model(small_cfg(n_layers=1, attn_window=4)).eval()
++    with torch.no_grad():
++        for p in model.parameters():
++            p.add_(0.05 * torch.randn_like(p))
++    x = torch.randint(0, 97, (2, 24))
++    x2 = x.clone()
++    x2[:, :10] = torch.randint(0, 97, (2, 10))           # change only tokens 0..9
++    with torch.no_grad():
++        a, b = model(x), model(x2)
++    assert torch.allclose(a[:, 13:], b[:, 13:], atol=1e-5), "attn_window: tokens outside the window leak in"
++    assert not torch.allclose(a[:, :10], b[:, :10]), "attn_window: model ignores its input"
++
++
++def test_token_conv_starts_as_identity():
++    """Zero-initialized token_conv leaves the model's output unchanged at initialization."""
++    torch.manual_seed(0)
++    plain = build_model(small_cfg())
++    conv = build_model(small_cfg(token_conv=4))
++    conv.load_state_dict(plain.state_dict(), strict=False)
++    x = torch.randint(0, 97, (2, 24))
++    with torch.no_grad():
++        assert torch.allclose(plain(x), conv(x), atol=1e-6)
++
++
++def test_token_conv_receptive_field_and_optimizer_group():
++    """token_conv mixes in exactly the last K-1 positions (none from the future), and its kernel is
++    trained by Adam, not Muon (it is not one of the 2-D hidden matrices)."""
++    from nanolm.models.gpt import TokenConv
++    torch.manual_seed(0)
++    conv = TokenConv(8, 4)
++    with torch.no_grad():
++        conv.weight.normal_()
++    h = torch.randn(1, 20, 8)
++    h2 = h.clone()
++    h2[:, 10] += 1.0                                      # perturb position 10 only
++    with torch.no_grad():
++        d = (conv(h2) - conv(h)).abs().sum(-1)[0]
++    changed = [t for t in range(20) if d[t] > 1e-6]
++    assert changed == [10, 11, 12, 13], changed
++    model = build_model(small_cfg(token_conv=4))
++    conv_ids = {id(b.conv.weight) for b in model.blocks}
++    assert not conv_ids & {id(p) for p in model.matrix_params()}

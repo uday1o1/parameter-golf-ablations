@@ -1,0 +1,113 @@
+name: baseline_mlr2
+seed: 1
+device: auto
+precision: fp32
+out_dir: outputs/nanolm
+run_dir: /root/repo/runs/sweeps/lr/baseline_mlr2_s1
+tags:
+- lr
+data:
+  source: shards
+  files: []
+  hf_name: ''
+  hf_config: ''
+  hf_split: train
+  hf_text_fields:
+  - text
+  hf_max_docs: 0
+  tokenizer: sp:data/golf/tokenizers/fineweb_1024_bpe.model
+  val_fraction: 0.1
+  split_by: tail
+  shard_dir: data/golf/fineweb10B_sp1024
+  train_pattern: '*_train_*.bin'
+  val_pattern: '*_val_*.bin'
+  max_train_shards: 0
+  cache_dir: data/nanolm
+  sampler: sequential
+model:
+  arch: gpt
+  vocab_size: 0
+  dim: 384
+  n_layers: 6
+  dropout: 0.0
+  tie_embeddings: true
+  rnn_hidden: 0
+  n_heads: 6
+  n_kv_heads: 3
+  max_seq_len: 1024
+  norm: rmsnorm
+  pos: rope
+  rope_base: 10000.0
+  mlp: relu2
+  mlp_mult: 2.0
+  bias: false
+  init_std: 0.02
+  embed_init_std: 0.005
+  qk_norm: true
+  qk_gain_init: 1.5
+  logit_softcap: 30.0
+  rope_dims: 0
+  zero_init_proj: true
+  embed_norm: true
+  layer_scales: true
+  resid_mix: true
+  ln_scale: false
+  unet_skips: true
+  recur_layers: []
+  recur_times: 1
+  recur_start_frac: 0.0
+  parallel_from: -1
+  xsa_last_n: 0
+  smear_gate: false
+  bigram_buckets: 0
+  bigram_dim: 128
+  value_residual: false
+  attn_gate: false
+  token_conv: 0
+  attn_window: 0
+  window_layers: []
+train:
+  seq_len: 512
+  batch_size: 16
+  grad_accum: 2
+  max_steps: 2500
+  max_time_sec: 5400.0
+  optimizer: muon
+  lr: 0.04
+  embed_lr: 0.05
+  matrix_lr: 0.08
+  weight_decay: 0.0
+  muon_wd: 0.0
+  muon_momentum: 0.95
+  muon_ns_steps: 5
+  betas:
+  - 0.9
+  - 0.95
+  grad_clip: 0.0
+  schedule: wsd
+  warmup_steps: 0
+  warmdown_frac: 0.25
+  min_lr_frac: 0.0
+  ema_decay: 0.0
+  qat_bits: 0
+  qat_start_frac: 0.0
+  compile: false
+  loss_on: all
+  log_every: 50
+  eval_every: 100
+  eval_tokens: 262144
+  save_checkpoint: true
+eval:
+  final_eval_tokens: 2097152
+  eval_seq_len: 0
+  sliding_stride: 64
+  batch_size: 8
+  sample_tokens: 0
+  sample_prompt: ''
+  temperature: 0.8
+  top_k: 50
+  top_p: 1.0
+export:
+  quant_bits: 8
+  compressor: lzma
+  budget_mb: 6.5

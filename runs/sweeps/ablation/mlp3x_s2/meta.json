@@ -1,0 +1,20 @@
+{
+ "name": "mlp3x",
+ "seed": 2,
+ "date": "2026-11-05T20:05:16",
+ "git": {
+  "commit": "8418fc1bae85657190f11749483bf2e729b9702c",
+  "branch": "HEAD",
+  "dirty": true
+ },
+ "host": "c6803a09a403",
+ "platform": "Linux-6.8.0-94-generic-x86_64-with-glibc2.35",
+ "python": "3.11.13",
+ "torch": "2.8.0+cu128",
+ "device": "cuda (precision=fp32, compile=yes)",
+ "world_size": 1,
+ "command": "/root/repo/external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/train.py --config /root/repo/external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml precision=\"fp32\" train.eval_every=100 eval.sliding_stride=64 model.mlp_mult=3 name=mlp3x seed=2 run_dir=/root/repo/runs/sweeps/ablation/mlp3x_s2 tags=[\"ablation\"]",
+ "tags": [
+  "ablation"
+ ]
+}

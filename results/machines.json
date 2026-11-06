@@ -1,0 +1,28 @@
+{
+ "note": "Rented machines, one RTX 4090 each (vast.ai). host = the container id in every run's meta.json; gpu_ram and cpu_ram in MB.",
+ "a": {
+  "host": "c6803a09a403",
+  "gpu_name": "RTX 4090",
+  "gpu_ram": 24564,
+  "driver_version": "590.48.01",
+  "cpu_name": "AMD EPYC 7742 64-Core Processor",
+  "cpu_ram": 1031832,
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime"
+ },
+ "b": {
+  "host": "eb1e3f545837",
+  "gpu_name": "RTX 4090",
+  "gpu_ram": 24564,
+  "driver_version": "595.91.07",
+  "cpu_name": "AMD Ryzen 9 7950X 16-Core Processor",
+  "cpu_ram": 95681,
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime"
+ },
+ "c": {
+  "host": "76bb84893be1",
+  "gpu_name": "RTX 4090",
+  "gpu_ram": 24564,
+  "driver_version": "580.119.02",
+  "cpu_name": "AMD EPYC 9684X 96-Core Processor"
+ }
+}

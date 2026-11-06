@@ -1,0 +1,36 @@
+# The final stack: the techniques that beat the baseline on the dev set by more than twice the noise floor
+# on all 5 seeds (exclusive self-attention in the last 3 layers, value residual, token_conv), plus the
+# Muon matrix learning rate chosen on the dev set (0.02, half of nanolm's 0.04). Leave-one-out arms remove
+# one of them each; the baseline is rerun here so the stack and its comparisons share one machine. The
+# other arms add the rest of nanolm's L6 recipe (int6 export, so they fit 6.5 MB) and move the learning
+# rates around the stack's values.
+#   python -m nanolm.sweep --sweep configs/sweeps/stack.yaml --gpus 0,0,0,0
+name: stack
+base: ../../external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml
+out_dir: runs
+seeds: [1337, 42, 1, 2, 3]
+common: {precision: fp32, train.eval_every: 100, eval.sliding_stride: 64}
+runs:
+  - name: baseline
+  - name: stack
+    overrides: {model.xsa_last_n: 3, model.value_residual: true, model.token_conv: 4, train.matrix_lr: 0.02}
+  - name: stack_minus_xsa
+    overrides: {model.value_residual: true, model.token_conv: 4, train.matrix_lr: 0.02}
+  - name: stack_minus_value_residual
+    overrides: {model.xsa_last_n: 3, model.token_conv: 4, train.matrix_lr: 0.02}
+  - name: stack_minus_token_conv
+    overrides: {model.xsa_last_n: 3, model.value_residual: true, train.matrix_lr: 0.02}
+  - name: stack_minus_matrix_lr      # nanolm's matrix_lr 0.04
+    overrides: {model.xsa_last_n: 3, model.value_residual: true, model.token_conv: 4}
+  - name: stack_matrix_lr0.01
+    overrides: {model.xsa_last_n: 3, model.value_residual: true, model.token_conv: 4, train.matrix_lr: 0.01}
+  - name: stack_adam_lr0.02
+    overrides: {model.xsa_last_n: 3, model.value_residual: true, model.token_conv: 4, train.matrix_lr: 0.02,
+                train.lr: 0.02}
+  - name: stack_plus_mlp3x           # needs int6 to fit
+    overrides: {model.xsa_last_n: 3, model.value_residual: true, model.token_conv: 4, train.matrix_lr: 0.02,
+                model.mlp_mult: 3, export.quant_bits: 6}
+  - name: stack_plus_l6              # + LeakyReLU^2, MLP 3x, depth recurrence: nanolm's whole L6 recipe, int6
+    overrides: {model.xsa_last_n: 3, model.value_residual: true, model.token_conv: 4, train.matrix_lr: 0.02,
+                model.mlp: leaky_relu2, model.mlp_mult: 3, model.recur_layers: [2, 3],
+                model.recur_start_frac: 0.35, export.quant_bits: 6}

@@ -1,0 +1,6 @@
+......................s.........ss...                                    [100%]
+=========================== short test summary info ============================
+SKIPPED [1] nanolm/tests/test_nanolm.py:110: golf tokenizer not downloaded
+SKIPPED [1] nanolm/tests/test_nanolm.py:202: could not import 'transformers': No module named 'transformers'
+SKIPPED [1] nanolm/tests/test_nanolm.py:224: could not import 'peft': No module named 'peft'
+34 passed, 3 skipped in 3.33s

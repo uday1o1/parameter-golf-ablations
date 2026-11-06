@@ -1,0 +1,38 @@
+# Learning-rate sensitivity around nanolm's settings (Muon matrix_lr 0.04; Adam lr 0.04 for gains, skip
+# weights and the token_conv kernels), 5 seeds: half and twice, and a quarter where half was best. The
+# 1x points are the ablation sweep's runs.
+#   python -m nanolm.sweep --sweep configs/sweeps/lr.yaml --gpus 0,0,0
+name: lr
+base: ../../external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml
+out_dir: runs
+seeds: [1337, 42, 1, 2, 3]
+common: {precision: fp32, train.eval_every: 100, eval.sliding_stride: 64}
+runs:
+  - name: baseline_mlr0.5
+    overrides: {train.matrix_lr: 0.02}
+  - name: baseline_mlr2
+    overrides: {train.matrix_lr: 0.08}
+  - name: token_conv_mlr0.5
+    overrides: {model.token_conv: 4, train.matrix_lr: 0.02}
+  - name: token_conv_mlr2
+    overrides: {model.token_conv: 4, train.matrix_lr: 0.08}
+  - name: token_conv_lr0.5
+    overrides: {model.token_conv: 4, train.lr: 0.02}
+  - name: token_conv_lr2
+    overrides: {model.token_conv: 4, train.lr: 0.08}
+  - name: attn_window_mlr0.5
+    overrides: {model.attn_window: 128, model.window_layers: [0, 1, 2], train.matrix_lr: 0.02}
+  - name: attn_window_mlr2
+    overrides: {model.attn_window: 128, model.window_layers: [0, 1, 2], train.matrix_lr: 0.08}
+  - name: baseline_mlr0.25
+    overrides: {train.matrix_lr: 0.01}
+  - name: token_conv_mlr0.25
+    overrides: {model.token_conv: 4, train.matrix_lr: 0.01}
+  - name: attn_window_mlr0.25
+    overrides: {model.attn_window: 128, model.window_layers: [0, 1, 2], train.matrix_lr: 0.01}
+  - name: baseline_lr0.5
+    overrides: {train.lr: 0.02}
+  - name: baseline_lr0.25
+    overrides: {train.lr: 0.01}
+  - name: token_conv_lr0.25
+    overrides: {model.token_conv: 4, train.lr: 0.01}

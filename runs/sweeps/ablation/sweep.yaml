@@ -1,0 +1,36 @@
+# Every technique alone on the L5 golf-mini baseline (6 x 384, 2500 steps x 16,384 tokens = 41M
+# tokens), 5 seeds, same data order. Evaluation: the first 2,097,152 validation tokens without
+# overlap (val_bpb), with a stride-64 sliding window (sliding_bpb), and after the int8 (int6 for the
+# L6 reference) export round trip at stride 64 (quant_val_bpb).
+#   python -m nanolm.sweep --sweep configs/sweeps/ablation.yaml --gpus 0,0,0
+name: ablation
+base: ../../external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml
+out_dir: runs
+seeds: [1337, 42, 1, 2, 3]
+common: {precision: fp32, train.eval_every: 100, eval.sliding_stride: 64}
+runs:
+  - name: baseline
+  - name: depth_recur             # re-run layers 2-3 once more, from 35% of training
+    overrides: {model.recur_layers: [2, 3], model.recur_start_frac: 0.35}
+  - name: leaky_relu2
+    overrides: {model.mlp: leaky_relu2}
+  - name: value_residual
+    overrides: {model.value_residual: true}
+  - name: mlp3x
+    overrides: {model.mlp_mult: 3}
+  - name: xsa                     # exclusive self-attention in the last 3 layers
+    overrides: {model.xsa_last_n: 3}
+  - name: qk_gain4
+    overrides: {model.qk_gain_init: 4.0}
+  - name: partial_rope_lnscale
+    overrides: {model.rope_dims: 16, model.ln_scale: true}
+  - name: smear_gate              # control for token_conv: a one-step, per-channel look-back on the embedding
+    overrides: {model.smear_gate: true}
+  - name: token_conv              # new: causal depthwise conv (kernel 4) on each block's attention input
+    overrides: {model.token_conv: 4}
+  - name: attn_window             # new: 128-token sliding-window attention in layers 0-2
+    overrides: {model.attn_window: 128, model.window_layers: [0, 1, 2]}
+  - name: l6_reference            # nanolm's L6 stack as published (int6 export), for reproduction
+    overrides: {model.mlp: leaky_relu2, model.mlp_mult: 3, model.value_residual: true,
+                model.recur_layers: [2, 3], model.recur_start_frac: 0.35, model.xsa_last_n: 3,
+                export.quant_bits: 6}
