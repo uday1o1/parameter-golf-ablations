@@ -141,7 +141,42 @@ def lr_fig():
     plt.close(fig)
 
 
+def dynamics_fig():
+    """(a) When the gains appear: change from the baseline during training. (b) Additivity per seed."""
+    G = S["curve_gaps"]
+    fig, (a, b) = plt.subplots(1, 2, figsize=(7.2, 3.1), gridspec_kw={"width_ratios": [1.4, 1]})
+    x = np.array(G["steps"]) * 16384 / 1e6
+    for i, (k, lab) in enumerate((("stack", "final stack"), ("l6_reference", "tutorial L6 stack"),
+                                  ("matrix_lr", "matrix lr 0.02"), ("xsa", LABEL["xsa"]),
+                                  ("value_residual", LABEL["value_residual"]), ("token_conv", LABEL["token_conv"]),
+                                  ("depth_recur", LABEL["depth_recur"]))):
+        m = np.array([g["mean_diff"] for g in G[k]])
+        c = "k" if k == "stack" else COL[i]
+        a.plot(x, m, marker="o", ms=2.5, lw=1, color=c, label=lab)
+    a.axhline(0, color="k", lw=0.6)
+    a.axvline(0.75 * 2500 * 16384 / 1e6, color="grey", lw=0.6, ls=":")
+    a.set_yscale("symlog", linthresh=0.01)
+    a.set_xlabel("training tokens (M; dotted: warmdown starts)")
+    a.set_ylabel("bpb change vs baseline")
+    a.set_title("(a) When the gains appear (mean over 5 seeds)", loc="left")
+    a.legend(frameon=False, fontsize=6, ncol=4, loc="upper center", bbox_to_anchor=(0.62, -0.22))
+    for key, lab, c in (("additivity_val_bpb", "final stack", "k"), (None, "tutorial L6 stack", COL[1])):
+        r = S["stack"][key] if key else S["ablation"]["l6_additivity"]["val_bpb"]
+        b.scatter(r["sum_of_singles"]["values"], r["stack_delta"]["values"], s=12, color=c, label=lab)
+    lim = [-0.045, -0.012]
+    b.plot(lim, lim, color="grey", lw=0.6, ls="--", label="additive")
+    b.set_xlim(lim); b.set_ylim(lim)
+    b.set_xlabel("sum of the parts alone (val bpb)")
+    b.set_ylabel("stack vs baseline (val bpb)")
+    b.set_title("(b) Additivity, one dot per seed", loc="left")
+    b.legend(frameon=False, fontsize=6.5)
+    fig.tight_layout()
+    fig.savefig(OUT / "dynamics.png", dpi=200)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     ablation_fig()
+    dynamics_fig()
     stack_fig()
     lr_fig()

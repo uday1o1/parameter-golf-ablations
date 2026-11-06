@@ -99,6 +99,10 @@ The stack is L5 + XSA + value residual + token_conv + matrix_lr 0.02, trained on
 
 The two int6 arms trade bits per weight for a bigger model and both fit. Adding the rest of L6 (LeakyReLU², MLP 3×, depth recurrence, int6) gives the lowest bpb, but against nanolm's own L6 stack (ablation, machine a) the extra techniques and learning rate change val bpb by −0.0011 (p = 0.28, not resolved).
 
+### When the gains appear
+
+nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every gain in the figure is largest at step 500 and narrows at every later evaluation shown: the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6% and 6% of their step-500 lead. At this budget most of what the techniques buy is a faster start.
+
 ### Bytes: the leaderboard model
 
 `python -m nanolm.compress` on each seed's checkpoint (`runs/sweeps/stack/stack_plus_l6_s*/compress.json`): compressed weights in MB (10⁶ bytes, without the 23,730 bytes of code) and the round-trip cost in bpb against the unquantized model, both at no overlap; means over 5 seeds. "fits": weights + code at most 6.5 MB on every seed (lzma).
@@ -125,7 +129,7 @@ Bpb of the unquantized model by evaluation stride: no overlap 1.6004, stride 256
 | `runs/sweeps/<sweep>/summary.csv`, `summary.md` | `python -m nanolm.analyze` on each sweep, with `curves.png` and `bars.png` |
 | `results/` | `summary.json` (every number above), `bench.json` (speed of each configuration alone), `machines.json`, `environment_b.txt`, `environment_c.txt`, `tests.txt`, `token_conv_weights.json` |
 | `analysis/` | `summarize.py`, `figures.py` |
-| `figures/` | `ablation.png`, `lr.png`, `stack.png` |
+| `figures/` | `ablation.png`, `lr.png`, `stack.png`, `dynamics.png` |
 | `scripts/` | `setup.sh`, `run_all.sh`, `dev_eval.py`, `bench_all.py`, `token_conv_weights.py`, `env.sh` |
 | `patches/` | the nanolm patch |
 

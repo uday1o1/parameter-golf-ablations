@@ -26,7 +26,13 @@ METRICS = ["val_bpb", "sliding_bpb", "quant_val_bpb", "dev_bpb"]
 TUTORIAL = {"L5_val_bpb_single": 1.633, "L5_val_bpb_2seeds": (1.6338, 0.0018), "L5_artifact_mb": 6.11,
             "L6_val_bpb": 1.601, "L6_sliding128_bpb": 1.554, "L6_int6_roundtrip": 1.555, "L6_artifact_mb": 5.59,
             "laptop_ablation_delta": {"depth_recur": -0.0053, "leaky_relu2": -0.0053, "value_residual": -0.0033,
-                                      "mlp3x": 0.0003, "partial_rope_lnscale": 0.0140}}
+                                      "mlp3x": 0.0003, "partial_rope_lnscale": 0.0140},
+            "laptop_ablation_p": {"depth_recur": 0.001, "leaky_relu2": 0.04, "value_residual": 0.08, "mlp3x": 0.92,
+                                  "partial_rope_lnscale": 0.09},
+            "lab_scale_delta": {"depth_recur": -0.0049, "leaky_relu2": -0.0059, "value_residual": -0.0069,
+                                "mlp3x": -0.0121, "partial_rope_lnscale": 0.0073},
+            "laptop_ablation_seeds": 2, "laptop_l6_2seeds": (1.6011, 0.0017), "laptop_l6_delta": -0.0327,
+            "laptop_l6_p": 0.0006, "lab_scale_l6_delta": -0.0352}
 
 
 def load(sweep):
@@ -261,6 +267,32 @@ def machines():
     return {k: "".join(sorted(v)) for k, v in out.items()}
 
 
+CURVE_STEPS = [500, 1000, 1500, 2000, 2500]
+
+
+def curve(sweep, arm):
+    """In-training validation bpb (first 262,144 val tokens) at CURVE_STEPS, per seed."""
+    out = {}
+    for s in SEEDS:
+        rows = {r["step"]: r["bpb"] for r in map(json.loads, open(RUNS / sweep / f"{arm}_s{s}" / "eval_log.jsonl"))}
+        out[s] = [rows[k] for k in CURVE_STEPS]
+    return out
+
+
+def curve_gaps():
+    """When does a gain appear? Paired change from the baseline of the same sweep (the lr arm against the
+    ablation baseline) at fixed points of training; warmdown starts at 75% (step 1875)."""
+    pairs = {"xsa": ("ablation", "xsa", "ablation"), "value_residual": ("ablation", "value_residual", "ablation"),
+             "token_conv": ("ablation", "token_conv", "ablation"), "matrix_lr": ("lr", "baseline_mlr0.5", "ablation"),
+             "depth_recur": ("ablation", "depth_recur", "ablation"), "l6_reference": ("ablation", "l6_reference", "ablation"),
+             "stack": ("stack", "stack", "stack"), "stack_plus_l6": ("stack", "stack_plus_l6", "stack")}
+    out = {"steps": CURVE_STEPS}
+    for name, (sw, arm, base_sw) in pairs.items():
+        a, b = curve(base_sw, "baseline"), curve(sw, arm)
+        out[name] = [paired([a[s][i] for s in SEEDS], [b[s][i] for s in SEEDS]) for i in range(len(CURVE_STEPS))]
+    return out
+
+
 def machine_check(A):
     """The same baseline seeds on the second machine: per-seed difference from the first machine's runs."""
     M = load("machine_check")
@@ -271,7 +303,8 @@ def main():
     A = load("ablation")
     ab = ablation()
     summary = {"tutorial": TUTORIAL, "ablation": ab, "machine_check": machine_check(A), "lr": lr_sensitivity(A),
-               "stack": stack_study(A, ab["selection"]), "compress": compress_tables(), "machines": machines()}
+               "stack": stack_study(A, ab["selection"]), "compress": compress_tables(), "machines": machines(),
+               "curve_gaps": curve_gaps()}
     bench = ROOT / "results" / "bench.json"
     if bench.exists():
         summary["bench"] = json.loads(bench.read_text())
