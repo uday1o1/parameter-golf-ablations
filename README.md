@@ -72,7 +72,7 @@ On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline is 1.
 | baseline, Adam lr | 1.6417 (−0.0010) | **1.6373 (−0.0054)** | 1.6386 (−0.0041) | 1.6427 |  |
 | token_conv, Adam lr |  | 1.6312 (−0.0048†) | **1.6305 (−0.0055†)** | 1.6359 | 1.6477 (+0.0118†) |
 
-Halving Muon's matrix_lr lowers dev bpb by 0.0086, 0.0084, 0.0079 (baseline, token_conv, attn_window), about as much as XSA, the largest single gain by point estimate (dev −0.0087). So matrix_lr 0.02 is a stack member, ablated like a technique. Adam's lr is a smaller effect on the baseline, below the resolution rule, so the stack keeps 0.04 and `stack_adam_lr0.02` tests the other choice.
+Halving Muon's matrix_lr lowers dev bpb by 0.0086, 0.0084, 0.0079 (baseline, token_conv, attn_window), about as much as XSA, the largest single gain by point estimate (dev −0.0087). So matrix_lr 0.02 is a stack member, ablated like a technique. No point of Adam's lr grid is resolved against 1× on the baseline (its lowest dev bpb, at 0.25×, is −0.0054 against 1×), so the stack keeps 0.04 and `stack_adam_lr0.02` tests the other choice.
 
 ### The stack and leave-one-out
 
@@ -101,7 +101,7 @@ The two int6 arms trade bits per weight for a bigger model and both fit. Adding 
 
 ### When the gains appear
 
-With the sweeps' `train.eval_every: 100`, nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every gain in the figure is largest at step 500, the first point shown, and narrows at every later evaluation shown: the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6.3% and 6.0% of their step-500 lead. At this budget most of what the techniques buy is a faster start.
+With the sweeps' `train.eval_every: 100`, nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every mean gap in the figure is largest at step 500, the first point shown, and narrows at every later evaluation shown (point estimates): the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6.3% and 6.0% of their step-500 lead. At this budget most of what the techniques buy is a faster start.
 
 ### Bytes: the leaderboard model
 
