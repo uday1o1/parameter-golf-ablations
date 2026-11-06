@@ -55,7 +55,7 @@ On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline is 1.
 | partial RoPE (16 dims) + LN-scale | 1.6478 ± 0.0042 | +0.0107 (p = 0.02) | 0/5 | +0.0103 / 0.0032 |  | 1.6012 | 1.6014 | 6.09 | 47 | 2.11 |
 
 - Three techniques pass the selection rule: XSA, value residual and token_conv. Their val changes are Holm-significant too.
-- token_conv, the new option, gives −0.0065, as much as value residual (−0.0066). SmearGate, the closest existing option (a one-step look-back on the embedding), makes the model worse (+0.0103, Holm-significant).
+- token_conv, the new option, gives −0.0065, about as much as value residual (−0.0066). SmearGate, the closest existing option (a one-step look-back on the embedding), makes the model worse (+0.0103, Holm-significant).
 - attn_window does not change bpb measurably at this sequence length (512): −0.0008 (p = 0.38).
 - MLP 3× does not fit 6.5 MB at int8. LeakyReLU² and depth recurrence lower dev bpb on all 5 seeds, but by less than twice the noise floor (0.0033 and 0.0033).
 - Seed noise: the median within-arm std of val bpb over the 12 arms is 0.0027.
@@ -72,7 +72,7 @@ On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline is 1.
 | baseline, Adam lr | 1.6417 (−0.0010) | **1.6373 (−0.0054)** | 1.6386 (−0.0041) | 1.6427 |  |
 | token_conv, Adam lr |  | 1.6312 (−0.0048†) | **1.6305 (−0.0055†)** | 1.6359 | 1.6477 (+0.0118†) |
 
-Halving Muon's matrix_lr lowers dev bpb by 0.0086, 0.0084, 0.0079 (baseline, token_conv, attn_window), about as much as XSA, the largest single change (dev −0.0087). So matrix_lr 0.02 is a stack member, ablated like a technique. Adam's lr is a smaller effect on the baseline, below the resolution rule, so the stack keeps 0.04 and `stack_adam_lr0.02` tests the other choice.
+Halving Muon's matrix_lr lowers dev bpb by 0.0086, 0.0084, 0.0079 (baseline, token_conv, attn_window), about as much as XSA, the largest single gain by point estimate (dev −0.0087). So matrix_lr 0.02 is a stack member, ablated like a technique. Adam's lr is a smaller effect on the baseline, below the resolution rule, so the stack keeps 0.04 and `stack_adam_lr0.02` tests the other choice.
 
 ### The stack and leave-one-out
 
@@ -86,7 +86,7 @@ The stack is L5 + XSA + value residual + token_conv + matrix_lr 0.02, trained on
 | Muon matrix_lr 0.02 | 1.6210 ± 0.0018 | +0.0046 (p = 0.005) H | 5/5 | +0.0044 | 0.0015 | −0.0088 |
 
 - **The gains do not add up.** The four single changes sum to −0.0305 per seed, the stack gives −0.0205, and the interaction is +0.0100 (95% CI +0.0033 to +0.0167, p = 0.01).
-- **token_conv is redundant in the stack.** Alone it gives −0.0065; removing it from the stack changes nothing measurable. Its kernels are trained, not dead: their RMS per layer ranges from 0.764 to 2.379 in the stack and from 0.682 to 2.755 alone at the same matrix_lr, from a zero start (`results/token_conv_weights.json`). XSA and the learning rate keep resolved, Holm-significant costs. Removing value residual costs bpb on all 5 seeds, but one seed's large cost leaves it unresolved.
+- **token_conv adds nothing measurable in the stack.** Alone it gives −0.0065; removing it from the stack changes nothing measurable. Its kernels are trained, not dead: their RMS per layer ranges from 0.764 to 2.379 in the stack and from 0.682 to 2.755 alone at the same matrix_lr, from a zero start (`results/token_conv_weights.json`). XSA and the learning rate keep resolved, Holm-significant costs. Removing value residual costs bpb on all 5 seeds, but one seed's large cost leaves it unresolved.
 - **The tutorial's L6 stack is close to additive.** With every part measured alone (the tutorial's laptop ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not significant).
 
 | stack-family arm | val bpb | vs stack | dev bpb | round trip | MB | machine |
