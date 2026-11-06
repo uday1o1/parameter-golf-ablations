@@ -1,4 +1,4 @@
-# Parameter golf at laptop scale: ablations, a leave-one-out stack and two new layer options
+# Parameter golf at small scale: ablations, a leave-one-out stack and two new layer options
 
 Which training and architecture techniques lower the validation bits per byte (bpb) of a small GPT whose compressed weights and model code must fit in 6.5 MB, when the training budget is fixed at 41M tokens? And when the helpful ones are combined, do their gains add up?
 
@@ -21,7 +21,7 @@ The bpb is that of the artifact: the weights are quantized, compressed, restored
 - **Metrics.** `val_bpb`: validation, non-overlapping windows of 512 tokens (nanolm's default). `sliding_bpb`: stride 64. `quant_val_bpb`: the restored artifact at stride 64. All runs train in fp32 (TF32 matrix multiplies).
 - **Statistics.** The seeds are 1337, 42, 1, 2 and 3 for every arm. A difference is paired over seeds (t-test, 4 degrees of freedom). It counts as **resolved** when it is at least twice the noise floor of the two arms compared (the mean of their two within-arm standard deviations). H marks a Holm-rejected test at 0.05; the families are the ten single techniques and the four leave-one-out arms. Other p values are uncorrected.
 - **Selection rule.** A technique joins the stack if its dev change is below −2× the noise floor and is negative on all 5 seeds.
-- **Machines.** Three rented RTX 4090 machines (`results/machines.json`, `results/environment_*.txt`): **a** ran the ablation; **b** the stack, its leave-one-out arms, its MLP 3× and L6 arms, the baseline rerun, the machine check and 12 of the 15 learning-rate arms; **c** the stack's two learning-rate arms and the other three learning-rate arms. Machine a's Python and torch versions are in each run's `meta.json` (it has no environment file). Every run's `meta.json` records its host. Several runs shared each GPU, so recorded wall-clock times are not comparable; `results/bench.json` gives the training speed of each ablation and stack configuration alone (`nanolm.bench`, with depth recurrence on at every step).
+- **Machines.** Three RTX 4090 machines (`results/machines.json`, `results/environment_*.txt`): **a** ran the ablation; **b** the stack, its leave-one-out arms, its MLP 3× and L6 arms, the baseline rerun, the machine check and 12 of the 15 learning-rate arms; **c** the stack's two learning-rate arms and the other three learning-rate arms. Machine a's Python and torch versions are in each run's `meta.json` (it has no environment file). Every run's `meta.json` records its host. Several runs shared each GPU, so recorded wall-clock times are not comparable; `results/bench.json` gives the training speed of each ablation and stack configuration alone (`nanolm.bench`, with depth recurrence on at every step).
 
 ## Results
 
@@ -87,7 +87,7 @@ The stack is L5 + XSA + value residual + token_conv + matrix_lr 0.02, trained on
 
 - **The gains do not add up.** The four single changes sum to −0.0305 per seed, the stack gives −0.0205, and the interaction is +0.0100 (95% CI +0.0033 to +0.0167, p = 0.01).
 - **token_conv adds nothing measurable in the stack.** Alone it gives −0.0065; removing it from the stack changes nothing measurable. Its kernels are trained, not dead: their RMS per layer ranges from 0.764 to 2.379 in the stack and from 0.682 to 2.755 alone at the same matrix_lr, from a zero start (`results/token_conv_weights.json`). XSA and the learning rate keep resolved, Holm-significant costs. Removing value residual costs bpb on all 5 seeds, but its mean cost (+0.0053) is below twice its noise floor (0.0069), so it is not resolved.
-- **The tutorial's L6 stack is consistent with additivity.** With every part measured alone (the tutorial's laptop ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not significant).
+- **The tutorial's L6 stack is consistent with additivity.** With every part measured alone (the tutorial's small-scale ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not significant).
 
 | stack-family arm | val bpb | vs stack | dev bpb | round trip | MB (largest seed) | machine |
 |---|---:|---:|---:|---:|---:|:---:|
