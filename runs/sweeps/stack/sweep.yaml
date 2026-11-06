@@ -1,7 +1,8 @@
-# The final stack: the techniques that beat the baseline on the dev set by more than twice the noise floor
-# on all 5 seeds (exclusive self-attention in the last 3 layers, value residual, token_conv), plus the
-# Muon matrix learning rate chosen on the dev set (0.02, half of nanolm's 0.04). Leave-one-out arms remove
-# one of them each; the baseline is rerun here so the stack and its comparisons share one machine. The
+# The final stack: the techniques whose mean dev-bpb gain over the baseline is more than twice the noise
+# floor and that lower dev bpb on all 5 seeds (exclusive self-attention in the last 3 layers, value
+# residual, token_conv), plus the Muon matrix learning rate chosen on the dev set (0.02, half of nanolm's
+# 0.04). Leave-one-out arms remove one of them each; the baseline is rerun here so the stack and its
+# comparisons share one machine (the two learning-rate arms of the stack ran on a third machine). The
 # other arms add the rest of nanolm's L6 recipe (int6 export, so they fit 6.5 MB) and move the learning
 # rates around the stack's values.
 #   python -m nanolm.sweep --sweep configs/sweeps/stack.yaml --gpus 0,0,0,0

@@ -1,4 +1,5 @@
-"""Every number in the README, computed from the run records into results/summary.json (no GPU).
+"""The run statistics of the README, computed from the run records into results/summary.json (no GPU).
+The token_conv kernel RMS is in results/token_conv_weights.json and the test results in results/tests.txt.
 
     python analysis/summarize.py
 
@@ -16,7 +17,7 @@ from scipy.stats import t as student_t, ttest_rel
 ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "runs" / "sweeps"
 SEEDS = [1337, 42, 1, 2, 3]
-SPEC_SEEDS = [1337, 42, 1]                  # the challenge's 3 seeds
+SEEDS3 = [1337, 42, 1]                      # the first three seeds (3-seed numbers of the leaderboard row)
 STEPS, TOKENS = 2500, 40_960_000
 BUDGET = 6_500_000
 SINGLES = ["depth_recur", "leaky_relu2", "value_residual", "mlp3x", "xsa", "qk_gain4", "partial_rope_lnscale",
@@ -88,7 +89,7 @@ def holm(ps):
 
 
 def select_stack(A):
-    """The pre-registered rule: dev-bpb change below -2x the noise floor of the two arms and negative on
+    """The selection rule: dev-bpb change below -2x the noise floor of the two arms and negative on
     all 5 seeds."""
     sel = {}
     for t in SINGLES:
@@ -118,7 +119,9 @@ def arm_summary(A, arm):
               "artifact_bytes": describe([A[arm][s]["artifact_bytes"] for s in SEEDS]),
               "fits_budget": all(A[arm][s]["fits_budget"] for s in SEEDS), "quant_bits": m0.get("quant_bits"),
               "train_time_sec": describe([A[arm][s]["train_time_sec"] for s in SEEDS]),
-              "train_flops": m0["train_flops"]})
+              "train_flops": m0["train_flops"], "code_bytes": m0["code_bytes"]})
+    for k in ("val_bpb", "quant_val_bpb"):
+        r[k + "_3seeds"] = describe([A[arm][s][k] for s in SEEDS3])
     return r
 
 
@@ -200,7 +203,8 @@ def stack_study(A, sel):
     loo = list(out["leave_one_out"])
     for t, r in zip(loo, holm([out["leave_one_out"][t]["stack_minus_t_vs_stack"]["val_bpb"]["p"] for t in loo])):
         out["leave_one_out"][t]["stack_minus_t_vs_stack"]["val_bpb"]["holm_reject"] = r
-    # additivity, per seed: (stack - baseline, same machine) - sum of the single changes (ablation machine)
+    # additivity, per seed: (stack - baseline, machine b) - sum of the single changes (machine a; the matrix_lr
+    # term is lr/baseline_mlr0.5 on machine b against the ablation baseline on machine a)
     for m in ("val_bpb", "dev_bpb", "quant_val_bpb"):
         sd = [S["stack"][s][m] - S["baseline"][s][m] for s in SEEDS]
         ss = [sum(single[t][s][m] - A["baseline"][s][m] for t in members) for s in SEEDS]
@@ -213,7 +217,7 @@ def stack_study(A, sel):
     best = min(fits, key=lambda n: np.mean([S[n][s]["dev_bpb"] for s in SEEDS]))
     m0 = S[best][SEEDS[0]]
     out["leaderboard"] = {"arm": best, "candidates_dev": {n: describe([S[n][s]["dev_bpb"] for s in SEEDS]) for n in fam},
-                          "quant_val_bpb_3seeds": describe([S[best][s]["quant_val_bpb"] for s in SPEC_SEEDS]),
+                          "quant_val_bpb_3seeds": describe([S[best][s]["quant_val_bpb"] for s in SEEDS3]),
                           "quant_val_bpb_5seeds": describe([S[best][s]["quant_val_bpb"] for s in SEEDS]),
                           "val_bpb_5seeds": describe([S[best][s]["val_bpb"] for s in SEEDS]),
                           "artifact_bytes": describe([S[best][s]["artifact_bytes"] for s in SEEDS]),

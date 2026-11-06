@@ -30,7 +30,7 @@ runs:
     overrides: {model.token_conv: 4}
   - name: attn_window             # new: 128-token sliding-window attention in layers 0-2
     overrides: {model.attn_window: 128, model.window_layers: [0, 1, 2]}
-  - name: l6_reference            # nanolm's L6 stack as published (int6 export), for reproduction
+  - name: l6_reference            # nanolm's L6 stack (int6 export), for reproduction; evaluated at this sweep's stride 64 (L6 uses 128)
     overrides: {model.mlp: leaky_relu2, model.mlp_mult: 3, model.value_residual: true,
                 model.recur_layers: [2, 3], model.recur_start_frac: 0.35, model.xsa_last_n: 3,
                 export.quant_bits: 6}

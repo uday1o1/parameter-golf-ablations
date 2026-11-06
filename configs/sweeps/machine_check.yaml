@@ -1,5 +1,5 @@
 # The baseline again on the second GPU machine, two seeds, to compare its runs with the first machine's
-# (the learning-rate sweep and part of the stack sweep ran there).
+# (machine b, which ran most of the learning-rate sweep and of the stack sweep).
 #   python -m nanolm.sweep --sweep configs/sweeps/machine_check.yaml --gpus 0,0
 name: machine_check
 base: ../../external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml

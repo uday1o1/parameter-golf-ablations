@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Every run behind the results (one GPU). Finished runs are skipped, so the script resumes.
+# Every run behind the results (one GPU). Finished runs are skipped, so the script resumes. The machine_check
+# sweep repeats two baseline seeds on a second machine: there, run `bash scripts/run_all.sh machine_check dev`.
 # SLOTS = how many training runs share the GPU at a time.
 #   bash scripts/run_all.sh                       # all stages
 #   bash scripts/run_all.sh ablation dev          # selected stages
@@ -22,6 +23,7 @@ dev() {                             # dev-set bpb of every run (held-out trainin
   python scripts/dev_eval.py runs/sweeps/*/*_s*
 }
 stack() { sweep stack; }            # final stack, leave-one-out, stack learning rates
+machine_check() { sweep machine_check; }   # two baseline seeds on a second machine (not in the default stages)
 compress() {                        # bits x compressor table and evaluation strides: baseline, stack, int6 stacks
   for d in runs/sweeps/stack/{baseline,stack,stack_plus_mlp3x,stack_plus_l6}_s*; do
     [ -e $d/compress.json ] || python -m nanolm.compress $d --bits 8 6 5 4 --compressors zlib lzma \

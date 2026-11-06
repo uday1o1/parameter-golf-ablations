@@ -62,7 +62,7 @@ def ablation_fig():
     st = S.get("stack")
     if st:
         x, m, s = curve("stack", "stack")
-        b.plot(x, m, color="k", lw=1.2, label="final stack")
+        b.plot(x, m, color="k", lw=1.2, label="stack (ours)")
         b.fill_between(x, m - s, m + s, color="k", alpha=0.15)
     b.set_ylim(1.57, 1.9)
     b.set_xlabel("training tokens (M)")
@@ -146,7 +146,7 @@ def dynamics_fig():
     G = S["curve_gaps"]
     fig, (a, b) = plt.subplots(1, 2, figsize=(7.2, 3.1), gridspec_kw={"width_ratios": [1.4, 1]})
     x = np.array(G["steps"]) * 16384 / 1e6
-    for i, (k, lab) in enumerate((("stack", "final stack"), ("l6_reference", "tutorial L6 stack"),
+    for i, (k, lab) in enumerate((("stack", "stack (ours)"), ("l6_reference", "tutorial L6 stack"),
                                   ("matrix_lr", "matrix lr 0.02"), ("xsa", LABEL["xsa"]),
                                   ("value_residual", LABEL["value_residual"]), ("token_conv", LABEL["token_conv"]),
                                   ("depth_recur", LABEL["depth_recur"]))):
@@ -160,7 +160,7 @@ def dynamics_fig():
     a.set_ylabel("bpb change vs baseline")
     a.set_title("(a) When the gains appear (mean over 5 seeds)", loc="left")
     a.legend(frameon=False, fontsize=6, ncol=4, loc="upper center", bbox_to_anchor=(0.62, -0.22))
-    for key, lab, c in (("additivity_val_bpb", "final stack", "k"), (None, "tutorial L6 stack", COL[1])):
+    for key, lab, c in (("additivity_val_bpb", "stack (ours)", "k"), (None, "tutorial L6 stack", COL[1])):
         r = S["stack"][key] if key else S["ablation"]["l6_additivity"]["val_bpb"]
         b.scatter(r["sum_of_singles"]["values"], r["stack_delta"]["values"], s=12, color=c, label=lab)
     lim = [-0.045, -0.012]
@@ -169,7 +169,7 @@ def dynamics_fig():
     b.set_xlabel("sum of the parts alone (val bpb)")
     b.set_ylabel("stack vs baseline (val bpb)")
     b.set_title("(b) Additivity, one dot per seed", loc="left")
-    b.legend(frameon=False, fontsize=6.5)
+    b.legend(frameon=False, fontsize=6.5, loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=2)
     fig.tight_layout()
     fig.savefig(OUT / "dynamics.png", dpi=200)
     plt.close(fig)
