@@ -23,7 +23,7 @@ BUDGET = 6_500_000
 SINGLES = ["depth_recur", "leaky_relu2", "value_residual", "mlp3x", "xsa", "qk_gain4", "partial_rope_lnscale",
            "smear_gate", "token_conv", "attn_window"]
 METRICS = ["val_bpb", "sliding_bpb", "quant_val_bpb", "dev_bpb"]
-# nanolm's tutorial (section 4.8), quoted for comparison
+# nanolm's tutorial (sections 0.2 and 4.8), quoted for comparison
 TUTORIAL = {"L5_val_bpb_single": 1.633, "L5_val_bpb_2seeds": (1.6338, 0.0018), "L5_artifact_mb": 6.11,
             "L6_val_bpb": 1.601, "L6_sliding128_bpb": 1.554, "L6_int6_roundtrip": 1.555, "L6_artifact_mb": 5.59,
             "laptop_ablation_delta": {"depth_recur": -0.0053, "leaky_relu2": -0.0053, "value_residual": -0.0033,

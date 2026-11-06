@@ -1,0 +1,13 @@
+# The leaderboard model on its own: nanolm's L5_golf_mini with the stack (XSA in the last 3 layers, value
+# residual, token_conv 4, Muon matrix_lr 0.02) and the rest of nanolm's L6 recipe (LeakyReLU^2, MLP 3x,
+# depth recurrence of layers 2-3 from 35% of training, int6 export). It resolves to the same settings as
+# the stack_plus_l6 arm of configs/sweeps/stack.yaml.
+#   python -m nanolm.train --config configs/leaderboard.yaml seed=1337
+defaults: [../external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml]
+name: leaderboard
+precision: fp32
+model: {xsa_last_n: 3, value_residual: true, token_conv: 4, mlp: leaky_relu2, mlp_mult: 3, recur_layers: [2, 3],
+        recur_start_frac: 0.35}
+train: {matrix_lr: 0.02, eval_every: 100}
+eval: {sliding_stride: 64}
+export: {quant_bits: 6}

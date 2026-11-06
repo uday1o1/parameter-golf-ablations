@@ -3,8 +3,8 @@
 # residual, token_conv), plus the Muon matrix learning rate chosen on the dev set (0.02, half of nanolm's
 # 0.04). Leave-one-out arms remove one of them each; the baseline is rerun here so the stack and its
 # comparisons share one machine (the two learning-rate arms of the stack ran on a third machine). The
-# other arms add the rest of nanolm's L6 recipe (int6 export, so they fit 6.5 MB) and move the learning
-# rates around the stack's values.
+# other arms add MLP 3x (stack_plus_mlp3x) or the rest of nanolm's L6 recipe (stack_plus_l6), both with
+# int6 export so they fit 6.5 MB, and move the learning rates around the stack's values.
 #   python -m nanolm.sweep --sweep configs/sweeps/stack.yaml --gpus 0,0,0,0
 name: stack
 base: ../../external/DeepDataMiningLearning/DeepDataMiningLearning/llm/nanolm/configs/laptop/L5_golf_mini.yaml

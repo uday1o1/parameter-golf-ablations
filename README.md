@@ -1,6 +1,6 @@
 # Parameter golf at laptop scale: ablations, a leave-one-out stack and two new layer options
 
-Which training and architecture techniques lower the validation bits per byte (bpb) of a small GPT whose compressed weights must fit in 6.5 MB, when the training budget is fixed at 41M tokens? And when the helpful ones are combined, do their gains add up?
+Which training and architecture techniques lower the validation bits per byte (bpb) of a small GPT whose compressed weights and model code must fit in 6.5 MB, when the training budget is fixed at 41M tokens? And when the helpful ones are combined, do their gains add up?
 
 The model is nanolm's `L5_golf_mini` (6 layers × 384, 6.6M parameters, U-Net skips, Muon + Adam, int8 + lzma export) trained for 2,500 steps of 16,384 tokens (40,960,000 tokens) on FineWeb with nanolm's 1,024-token SentencePiece vocabulary. Every configuration in the results tables is trained with 5 seeds. The work runs on [nanolm](https://github.com/lkk688/DeepDataMiningLearning/tree/8418fc1bae85657190f11749483bf2e729b9702c/DeepDataMiningLearning/llm) at commit `8418fc1` with one patch (`patches/`) that adds two config options and their tests:
 
@@ -11,7 +11,7 @@ The model is nanolm's `L5_golf_mini` (6 layers × 384, 6.6M parameters, U-Net sk
 
 | configuration | bpb, seeds 1337, 42, 1 | bpb, all 5 seeds | artifact (largest of the seeds) | config |
 |---|---:|---:|---:|---|
-| stack + the rest of L6, int6 + lzma | **1.5526 ± 0.0015** | 1.5536 ± 0.0018 | 5,695,318 bytes | `configs/sweeps/stack.yaml`, arm `stack_plus_l6` |
+| stack + the rest of L6, int6 + lzma | **1.5526 ± 0.0015** | 1.5536 ± 0.0018 | 5,695,318 bytes | `configs/leaderboard.yaml` (arm `stack_plus_l6` of `configs/sweeps/stack.yaml`) |
 
 The bpb is that of the artifact: the weights are quantized, compressed, restored and evaluated on the first 2,097,152 validation tokens with a sliding window of stride 64. The artifact counts the compressed weights and nanolm's model and quantization code (23,730 bytes). It is the arm chosen by the leaderboard rule: the lowest mean dev bpb among the five stack-family arms that fit 6.5 MB on every seed (dev bpb: stack_plus_l6 1.6053, stack_adam_lr0.02 1.6128, stack_plus_mlp3x 1.6134, stack 1.6216, stack_matrix_lr0.01 1.6254).
 
@@ -34,7 +34,7 @@ The bpb is that of the artifact: the weights are quantized, compressed, restored
 | `L6_golf_mini_stack` (int6), 5 seeds | 1.6015 ± 0.0011 | 1.5532 ± 0.0014 | 1.5544 ± 0.0013 | 5.60 MB | 3.09 P |
 | nanolm's tutorial | 1.601 | 1.554 (stride 128) | 1.555 (stride 128) | 5.59 MB | 3.1 P |
 
-On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline is 1.6358 ± 0.0023. FLOPs: nanolm's per-token estimate (`bench.flops_per_token`: 6 × non-embedding parameters + 12 × layers × width × sequence length) times the training tokens, plus the re-run layers' share from 35% of training (`analysis/summarize.py`).
+On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline's val bpb is 1.6358 ± 0.0023 and its artifact round trip 1.5895 ± 0.0023. FLOPs: nanolm's per-token estimate (`bench.flops_per_token`: 6 × non-embedding parameters + 12 × layers × width × sequence length) times the training tokens, plus the re-run layers' share from 35% of training (`analysis/summarize.py`).
 
 ### Each technique alone (L5 + one change, 5 seeds)
 
@@ -55,14 +55,14 @@ On seeds 1337, 42 and 1 (the leaderboard row's 3-seed column) the baseline is 1.
 | partial RoPE (16 dims) + LN-scale | 1.6478 ± 0.0042 | +0.0107 (p = 0.02) | 0/5 | +0.0103 / 0.0032 |  | 1.6012 | 1.6014 | 6.09 | 47 | 2.11 |
 
 - Three techniques pass the selection rule: XSA, value residual and token_conv. Their val changes are Holm-significant too.
-- token_conv, the new option, gives −0.0065, about as much as value residual (−0.0066). SmearGate, the closest existing option (a one-step look-back on the embedding), makes the model worse (+0.0103, Holm-significant).
+- token_conv, the new option, gives −0.0065, about as much as, by point estimate, value residual (−0.0066). SmearGate, the closest existing option (a one-step look-back on the embedding), makes the model worse (+0.0103, Holm-significant).
 - attn_window does not change bpb measurably at this sequence length (512): −0.0008 (p = 0.38).
 - MLP 3× does not fit 6.5 MB at int8. LeakyReLU² and depth recurrence lower dev bpb on all 5 seeds, but by less than twice the noise floor (0.0033 and 0.0033).
 - Seed noise: the median within-arm std of val bpb over the 12 arms is 0.0027.
 
 ### Learning rate
 
-`L5_golf_mini` inherits its learning rates (Muon matrix_lr 0.04, Adam lr 0.04) from nanolm's 8×H100 golf baseline (`04_golf_baseline.yaml`, 524,288 tokens per step). Dev bpb, mean over 5 seeds, with the change from 1× (†: resolved). Bold: the lowest point.
+`L5_golf_mini` inherits its learning rates (Muon matrix_lr 0.04, Adam lr 0.04) from nanolm's 8×H100 golf baseline (`04_golf_baseline.yaml`, 524,288 tokens per step). Dev bpb, mean over 5 seeds, with the change from 1× (†: resolved). Bold: the lowest point. The 1× runs ran on machine a, the other rates on machine b except baseline Adam 0.25×, token_conv Adam 0.25× and attn_window matrix_lr 0.25× (machine c).
 
 | arm, rate | 0.125× | 0.25× | 0.5× | 1× | 2× |
 |---|---:|---:|---:|---:|---:|
@@ -78,7 +78,7 @@ Halving Muon's matrix_lr lowers dev bpb by 0.0086, 0.0084, 0.0079 (baseline, tok
 
 The stack is L5 + XSA + value residual + token_conv + matrix_lr 0.02, trained on machine b together with a rerun of the baseline. The rerun matches the ablation's baseline: Δ −0.0001 val bpb (p = 0.87). The stack's val bpb is 1.6165 ± 0.0012, a change of −0.0205 from the baseline (p = 0.0002, all 5 seeds).
 
-| removed from the stack | val bpb | cost of removing it | seeds worse | dev cost | floor | the technique alone |
+| removed from the stack | val bpb | cost of removing it | seeds worse | dev cost | val floor | the technique alone |
 |---|---:|---:|---:|---:|---:|---:|
 | value residual | 1.6218 ± 0.0057 | +0.0053 (p = 0.08) | 5/5 | +0.0057 | 0.0035 | −0.0066 |
 | XSA, last 3 layers | 1.6201 ± 0.0019 | +0.0036 (p = 0.003) H | 5/5 | +0.0038 | 0.0016 | −0.0087 |
@@ -86,10 +86,10 @@ The stack is L5 + XSA + value residual + token_conv + matrix_lr 0.02, trained on
 | Muon matrix_lr 0.02 | 1.6210 ± 0.0018 | +0.0046 (p = 0.005) H | 5/5 | +0.0044 | 0.0015 | −0.0088 |
 
 - **The gains do not add up.** The four single changes sum to −0.0305 per seed, the stack gives −0.0205, and the interaction is +0.0100 (95% CI +0.0033 to +0.0167, p = 0.01).
-- **token_conv adds nothing measurable in the stack.** Alone it gives −0.0065; removing it from the stack changes nothing measurable. Its kernels are trained, not dead: their RMS per layer ranges from 0.764 to 2.379 in the stack and from 0.682 to 2.755 alone at the same matrix_lr, from a zero start (`results/token_conv_weights.json`). XSA and the learning rate keep resolved, Holm-significant costs. Removing value residual costs bpb on all 5 seeds, but one seed's large cost leaves it unresolved.
-- **The tutorial's L6 stack is consistent with additive.** With every part measured alone (the tutorial's laptop ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not significant).
+- **token_conv adds nothing measurable in the stack.** Alone it gives −0.0065; removing it from the stack changes nothing measurable. Its kernels are trained, not dead: their RMS per layer ranges from 0.764 to 2.379 in the stack and from 0.682 to 2.755 alone at the same matrix_lr, from a zero start (`results/token_conv_weights.json`). XSA and the learning rate keep resolved, Holm-significant costs. Removing value residual costs bpb on all 5 seeds, but its mean cost (+0.0053) is below twice its noise floor (0.0069), so it is not resolved.
+- **The tutorial's L6 stack is consistent with additivity.** With every part measured alone (the tutorial's laptop ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not significant).
 
-| stack-family arm | val bpb | vs stack | dev bpb | round trip | MB | machine |
+| stack-family arm | val bpb | vs stack | dev bpb | round trip | MB (largest seed) | machine |
 |---|---:|---:|---:|---:|---:|:---:|
 | stack (int8) | 1.6165 ± 0.0012 | | 1.6216 ± 0.0007 | 1.5682 | 6.16 | b |
 | stack, matrix_lr 0.01 | 1.6199 ± 0.0039 | +0.0034 (p = 0.11), not resolved | 1.6254 ± 0.0041 | 1.5720 | 6.16 | c |
@@ -125,9 +125,10 @@ Bpb of the unquantized model by evaluation stride: no overlap 1.6004, stride 256
 | path | contents |
 |---|---|
 | `configs/sweeps/` | `ablation.yaml` (each technique alone), `lr.yaml`, `stack.yaml` (stack, leave-one-out, stack-family arms), `machine_check.yaml` (two baseline seeds on a second machine) |
-| `runs/sweeps/<sweep>/<arm>_s<seed>/` | nanolm's record of every run (`config.yaml`, `meta.json`, `train_log.jsonl`, `eval_log.jsonl`, `metrics.json`, `stdout.log`), `dev.json`; for the stack sweep's baseline, stack, stack_plus_mlp3x and stack_plus_l6 runs also `compress.json` |
+| `configs/leaderboard.yaml` | the leaderboard model on its own (the settings of the `stack_plus_l6` arm) |
+| `runs/sweeps/<sweep>/<arm>_s<seed>/` | nanolm's record of every run (`config.yaml`, `meta.json`, `train_log.jsonl`, `eval_log.jsonl`, `metrics.json`, `stdout.log`), `dev.json`; for the stack sweep's baseline, stack, stack_plus_mlp3x and stack_plus_l6 runs also `compress.json` and `compress.log` |
 | `runs/sweeps/<sweep>/summary.csv`, `summary.md` | `python -m nanolm.analyze` on the ablation, lr and stack sweeps, with `curves.png` and `bars.png` |
-| `results/` | `summary.json` (every result above except the token_conv kernel RMS, in `token_conv_weights.json`, and the test count, in `tests.txt`), `bench.json` (speed of each ablation and stack configuration alone), `machines.json`, `environment_b.txt`, `environment_c.txt`, `tests.txt`, `token_conv_weights.json` |
+| `results/` | `summary.json` (every result above, or the values it is computed from, except the token_conv kernel RMS, in `token_conv_weights.json`, and the test count, in `tests.txt`), `bench.json` (speed of each ablation and stack configuration alone), `machines.json`, `environment_b.txt`, `environment_c.txt`, `tests.txt`, `token_conv_weights.json` |
 | `analysis/` | `summarize.py`, `figures.py` |
 | `figures/` | `ablation.png`, `lr.png`, `stack.png`, `dynamics.png` |
 | `scripts/` | `setup.sh`, `run_all.sh`, `dev_eval.py`, `bench_all.py`, `token_conv_weights.py`, `env.sh` |
@@ -154,4 +155,4 @@ python analysis/figures.py     # figures/*.png (no GPU)
 
 - **Scale.** One model size and token budget (6.6M to 8.4M parameters, 41M tokens) and one sequence length (512). attn_window is meant for longer contexts than these.
 - **Fixed settings.** New options at one setting each (token_conv 4, attn_window 128 in layers 0 to 2); learning rates on a factor-of-two grid.
-- **Statistics.** 5 seeds per arm; paired t-tests with Holm correction only within the two families named above. Arms run on different machines are paired by seed across machines. The baseline rerun on machine b differs from machine a's by −0.0001 bpb (95% CI −0.0021 to +0.0019); machine c has no calibration run.
+- **Statistics.** 5 seeds per arm (the machine check: 2); paired t-tests with Holm correction only within the two families named above. Arms run on different machines are paired by seed across machines. The baseline rerun on machine b differs from machine a's by −0.0001 bpb (95% CI −0.0021 to +0.0019); machine c has no calibration run.

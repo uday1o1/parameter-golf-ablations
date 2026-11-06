@@ -34,7 +34,7 @@ conv_weights() {                    # trained token_conv kernels: stack, token_c
   python scripts/token_conv_weights.py runs/sweeps/{stack/stack,lr/token_conv_mlr0.5,stack/stack_plus_l6}_s{1337,42,1,2,3} \
     > results/token_conv_weights.json
 }
-bench() { python scripts/bench_all.py results/bench.json; }    # tokens/s of each configuration alone
+bench() { python scripts/bench_all.py results/bench.json; }    # tokens/s of each ablation and stack arm alone
 analyze() {                         # nanolm.analyze per sweep (val_bpb)
   for s in ablation stack; do
     python -m nanolm.analyze runs/sweeps/$s --metric val_bpb --baseline baseline > runs/sweeps/$s/analyze_stdout.txt

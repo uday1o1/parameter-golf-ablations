@@ -1,5 +1,5 @@
-"""Training speed of every configuration on its own (GPU), with nanolm.bench: a few real training steps
-on random tokens, nothing else running. The sweeps share the GPU between runs, so their recorded times
+"""Training speed of every arm of the ablation and stack sweeps on its own (GPU), with nanolm.bench: a few
+real training steps on random tokens, nothing else running. The sweeps share the GPU between runs, so their recorded times
 are not comparable; these are.
 
     python scripts/bench_all.py results/bench.json
