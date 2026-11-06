@@ -134,6 +134,13 @@ def ablation():
         sd = [A["l6_reference"][s][m] - A["baseline"][s][m] for s in SEEDS]
         out["l6_additivity"][m] = {"parts": parts, "sum_of_singles": describe(ss), "stack_delta": describe(sd),
                                    "interaction": paired(ss, sd)}
+    # does choosing on dev change anything? the same rule on validation, and how the two sets' changes agree
+    ts = [t for t in SINGLES if t in A]
+    dv, vv = [out["vs_baseline"][t]["dev_bpb"]["mean_diff"] for t in ts], [out["vs_baseline"][t]["val_bpb"]["mean_diff"] for t in ts]
+    val_rule = [t for t in ts if out["vs_baseline"][t]["val_bpb"]["mean_diff"] < -2 * out["vs_baseline"][t]["val_bpb"]["floor"]
+                and out["vs_baseline"][t]["val_bpb"]["n_negative"] == len(SEEDS)]
+    out["dev_vs_val"] = {"pearson_r": float(np.corrcoef(dv, vv)[0, 1]), "max_abs_diff": float(max(abs(a - b) for a, b in zip(dv, vv))),
+                         "selected_by_dev": [t for t in ts if out["selection"][t]["selected"]], "selected_by_val_rule": val_rule}
     out["noise_floor_val"] = float(np.median([np.std([A[a][s]["val_bpb"] for s in SEEDS], ddof=1) for a in A]))
     return out
 
@@ -232,12 +239,13 @@ def compress_tables():
         st = {}
         for s, r in rows.items():
             for x in r["stride"]:
-                st.setdefault(x["stride"], []).append(x["bpb"])
+                st.setdefault(x["stride"], []).append(x)
         out[f"{sweep}/{arm}"] = {"seeds": sorted(rows), "quant": {k: {"bytes": describe([x["bytes"] for x in v]),
                                                          "bits_per_param": describe([x["bits_per_param"] for x in v]),
                                                          "bpb": describe([x["bpb"] for x in v]),
                                                          "gap": describe([x["gap"] for x in v])} for k, v in q.items()},
-                    "stride": {str(k): describe(v) for k, v in st.items()}}
+                    "stride": {str(k): {**describe([x["bpb"] for x in v]), "eval_sec": describe([x["sec"] for x in v])}
+                               for k, v in st.items()}}
     return out
 
 

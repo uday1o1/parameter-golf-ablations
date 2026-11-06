@@ -62,15 +62,15 @@ On the challenge's three seeds the baseline is 1.6358 ± 0.0023. FLOPs are nanol
 
 ### Learning rate
 
-`L5_golf_mini` inherits its learning rates (Muon matrix_lr 0.04, Adam lr 0.04) from nanolm's 8×H100 golf baseline (`04_golf_baseline.yaml`, 524,288 tokens per step). Dev bpb, mean over 5 seeds, with the change from 1× (* resolved). Bold: the best point.
+`L5_golf_mini` inherits its learning rates (Muon matrix_lr 0.04, Adam lr 0.04) from nanolm's 8×H100 golf baseline (`04_golf_baseline.yaml`, 524,288 tokens per step). Dev bpb, mean over 5 seeds, with the change from 1× (†: resolved). Bold: the best point.
 
 | arm, rate | 0.125× | 0.25× | 0.5× | 1× | 2× |
 |---|---:|---:|---:|---:|---:|
-| baseline, Muon matrix_lr |  | 1.6348 (−0.0079*) | **1.6341 (−0.0086*)** | 1.6427 | 1.6571 (+0.0144*) |
-| token_conv, Muon matrix_lr |  | 1.6297 (−0.0062*) | **1.6275 (−0.0084*)** | 1.6359 | 1.6416 (+0.0057*) |
-| attn_window, Muon matrix_lr |  | 1.6362 (−0.0053) | **1.6336 (−0.0079*)** | 1.6415 | 1.6514 (+0.0099*) |
+| baseline, Muon matrix_lr |  | 1.6348 (−0.0079†) | **1.6341 (−0.0086†)** | 1.6427 | 1.6571 (+0.0144†) |
+| token_conv, Muon matrix_lr |  | 1.6297 (−0.0062†) | **1.6275 (−0.0084†)** | 1.6359 | 1.6416 (+0.0057†) |
+| attn_window, Muon matrix_lr |  | 1.6362 (−0.0053) | **1.6336 (−0.0079†)** | 1.6415 | 1.6514 (+0.0099†) |
 | baseline, Adam lr | 1.6417 (−0.0010) | **1.6373 (−0.0054)** | 1.6386 (−0.0041) | 1.6427 |  |
-| token_conv, Adam lr |  | 1.6312 (−0.0048*) | **1.6305 (−0.0055*)** | 1.6359 | 1.6477 (+0.0118*) |
+| token_conv, Adam lr |  | 1.6312 (−0.0048†) | **1.6305 (−0.0055†)** | 1.6359 | 1.6477 (+0.0118†) |
 
 Halving Muon's matrix_lr lowers dev bpb by 0.0086, 0.0084, 0.0079 (baseline, token_conv, attn_window), as much as the best single technique (XSA, dev −0.0087). So matrix_lr 0.02 is a stack member, ablated like a technique. Adam's lr is a smaller effect on the baseline, below the resolution rule, so the stack keeps 0.04 and `stack_adam_lr0.02` tests the other choice.
 
