@@ -87,7 +87,7 @@ The stack is L5 + XSA + value residual + token_conv + matrix_lr 0.02, trained on
 
 - **The gains do not add up.** The four single changes sum to −0.0305 per seed, the stack gives −0.0205, and the interaction is +0.0100 (95% CI +0.0033 to +0.0167, p = 0.01).
 - **token_conv adds nothing measurable in the stack.** Alone it gives −0.0065; removing it from the stack changes nothing measurable. Its kernels are trained, not dead: their RMS per layer ranges from 0.764 to 2.379 in the stack and from 0.682 to 2.755 alone at the same matrix_lr, from a zero start (`results/token_conv_weights.json`). XSA and the learning rate keep resolved, Holm-significant costs. Removing value residual costs bpb on all 5 seeds, but one seed's large cost leaves it unresolved.
-- **The tutorial's L6 stack is close to additive.** With every part measured alone (the tutorial's laptop ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not significant).
+- **The tutorial's L6 stack is consistent with additive.** With every part measured alone (the tutorial's laptop ablation did not test XSA alone), the five parts of L6 sum to −0.0286, L6 gives −0.0357, and the interaction is −0.0070 (p = 0.11, not significant).
 
 | stack-family arm | val bpb | vs stack | dev bpb | round trip | MB | machine |
 |---|---:|---:|---:|---:|---:|:---:|
@@ -101,7 +101,7 @@ The two int6 arms trade bits per weight for a bigger model and both fit. Adding 
 
 ### When the gains appear
 
-With the sweeps' `train.eval_every: 100`, nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every mean gap in the figure is largest at step 500, the first point shown, and narrows at every later evaluation shown (point estimates): the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6.3% and 6.0% of their step-500 lead. At this budget most of what the techniques buy is a faster start.
+With the sweeps' `train.eval_every: 100`, nanolm evaluates each run on the first 262,144 validation tokens every 100 steps (`figures/dynamics.png`). Except for depth recurrence, which switches on at 35% of training, every mean gap in the figure is largest at step 500, the first point shown, and narrows at every later evaluation shown (point estimates): the stack's change from the baseline is −0.145 at step 500 and −0.0196 at the end; value residual and token_conv end with 6.3% and 6.0% of their step-500 lead. By these point estimates, most of each early lead is gone by the end of the budget.
 
 ### Bytes: the leaderboard model
 
